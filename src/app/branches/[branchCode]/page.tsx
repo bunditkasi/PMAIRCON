@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 
 import { BranchDetail } from "../../../features/branches/branch-detail";
 import {
+  detailBranchFixtures,
+  detailUnitFixtures,
+} from "../../../lib/fixtures/detail-fixtures";
+import {
   findBranchDetail,
-  type BranchRecord,
-  type BranchUnitRecord,
 } from "../../../lib/services/branch-service";
 
 interface BranchDetailPageProps {
@@ -19,8 +21,8 @@ export default async function BranchDetailPage({
 }: BranchDetailPageProps) {
   const { branchCode } = await params;
   const detail = findBranchDetail(branchCode, {
-    branches: branchFixtures,
-    units: unitFixtures,
+    branches: detailBranchFixtures,
+    units: detailUnitFixtures,
   });
 
   if (!detail) {
@@ -41,23 +43,3 @@ export default async function BranchDetailPage({
     </main>
   );
 }
-
-const branchFixtures: BranchRecord[] = [
-  {
-    branchCode: "BC01",
-    outletName: "SAPS",
-    supplierName: "Klangsub Engineer",
-  },
-  {
-    branchCode: "BE01",
-    outletName: "Ayutthaya",
-    supplierName: "Cooling Partner",
-  },
-];
-
-const unitFixtures: BranchUnitRecord[] = [
-  { unitId: "BC01-CT-01", branchCode: "BC01" },
-  { unitId: "BC01-CT-02", branchCode: "BC01" },
-  { unitId: "BC01-CS-01", branchCode: "BC01" },
-  { unitId: "BE01-AHU-01", branchCode: "BE01" },
-];

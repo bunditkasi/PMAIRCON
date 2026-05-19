@@ -2,10 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { UnitDetail } from "../../../features/units/unit-detail";
+import { detailUnitFixtures } from "../../../lib/fixtures/detail-fixtures";
 import {
   findUnitDetail,
   type UnitPmRecord,
-  type UnitRecord,
   type UnitRepairRecord,
 } from "../../../lib/services/unit-service";
 
@@ -18,7 +18,7 @@ interface UnitDetailPageProps {
 export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
   const { unitId } = await params;
   const detail = findUnitDetail(unitId, {
-    units: unitFixtures,
+    units: detailUnitFixtures,
     pmLogs: pmFixtures,
     repairLogs: repairFixtures,
   });
@@ -41,12 +41,6 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
     </main>
   );
 }
-
-const unitFixtures: UnitRecord[] = [
-  { unitId: "BC01-CT-01", branchCode: "BC01" },
-  { unitId: "BC01-CT-02", branchCode: "BC01" },
-  { unitId: "BE01-AHU-01", branchCode: "BE01" },
-];
 
 const pmFixtures: UnitPmRecord[] = [
   { unitId: "BC01-CT-01", serviceDate: "2026-01-01" },

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  detailBranchFixtures,
+  detailUnitFixtures,
+} from "../../src/lib/fixtures/detail-fixtures";
+import {
   assembleBranchDetail,
   findBranchDetail,
 } from "../../src/lib/services/branch-service";
@@ -20,7 +24,37 @@ describe("assembleBranchDetail", () => {
     );
 
     expect(result.branch.branchCode).toBe("BC01");
-    expect(result.units).toHaveLength(1);
+    expect(result.units).toEqual([{ unitId: "BC01-CT-01", branchCode: "BC01" }]);
+  });
+
+  it("returns detached branch and unit records", () => {
+    const branch = {
+      branchCode: "BC01",
+      outletName: "SAPS",
+      supplierName: "Klangsub Engineer",
+    };
+    const units = [{ unitId: "BC01-CT-01", branchCode: "BC01" }];
+
+    const result = assembleBranchDetail(branch, units);
+
+    result.branch.outletName = "Updated";
+    result.units[0].unitId = "CHANGED";
+
+    expect(branch.outletName).toBe("SAPS");
+    expect(units[0].unitId).toBe("BC01-CT-01");
+  });
+
+  it("returns an empty unit list when a branch has no matching units", () => {
+    const result = assembleBranchDetail(
+      {
+        branchCode: "BZ01",
+        outletName: "Chiang Mai",
+        supplierName: "Northern Cooling",
+      },
+      [{ unitId: "BC01-CT-01", branchCode: "BC01" }],
+    );
+
+    expect(result.units).toEqual([]);
   });
 });
 
@@ -62,5 +96,23 @@ describe("findBranchDetail", () => {
         { unitId: "BC01-CT-02", branchCode: "BC01" },
       ],
     });
+  });
+
+  it("builds branch detail from the shared fixtures used by the page flow", () => {
+    const detail = findBranchDetail("BC01", {
+      branches: detailBranchFixtures,
+      units: detailUnitFixtures,
+    });
+
+    expect(detail?.branch).toEqual({
+      branchCode: "BC01",
+      outletName: "SAPS",
+      supplierName: "Klangsub Engineer",
+    });
+    expect(detail?.units.map((unit) => unit.unitId)).toEqual([
+      "BC01-CT-01",
+      "BC01-CT-02",
+      "BC01-CS-01",
+    ]);
   });
 });
