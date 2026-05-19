@@ -28,10 +28,54 @@ export interface UnitDetailCollections {
   repairLogs: UnitRepairRecord[];
 }
 
+function parseServiceDate(serviceDate: string): number | null {
+  const normalizedMatch = serviceDate.match(
+    /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T\s].*)?$/,
+  );
+
+  if (normalizedMatch) {
+    const [, yearText, monthText, dayText] = normalizedMatch;
+    const year = Number(yearText);
+    const month = Number(monthText);
+    const day = Number(dayText);
+
+    if (
+      Number.isInteger(year) &&
+      Number.isInteger(month) &&
+      Number.isInteger(day) &&
+      month >= 1 &&
+      month <= 12 &&
+      day >= 1 &&
+      day <= 31
+    ) {
+      return Date.UTC(year, month - 1, day);
+    }
+  }
+
+  const parsedTimestamp = Date.parse(serviceDate);
+
+  return Number.isNaN(parsedTimestamp) ? null : parsedTimestamp;
+}
+
 function sortByServiceDateDesc<T extends { serviceDate: string }>(
   left: T,
   right: T,
 ) {
+  const leftTimestamp = parseServiceDate(left.serviceDate);
+  const rightTimestamp = parseServiceDate(right.serviceDate);
+
+  if (leftTimestamp !== null && rightTimestamp !== null) {
+    return rightTimestamp - leftTimestamp;
+  }
+
+  if (leftTimestamp === null && rightTimestamp !== null) {
+    return 1;
+  }
+
+  if (leftTimestamp !== null && rightTimestamp === null) {
+    return -1;
+  }
+
   return right.serviceDate.localeCompare(left.serviceDate);
 }
 

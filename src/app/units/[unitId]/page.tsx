@@ -2,12 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { UnitDetail } from "../../../features/units/unit-detail";
-import { detailUnitFixtures } from "../../../lib/fixtures/detail-fixtures";
 import {
-  findUnitDetail,
-  type UnitPmRecord,
-  type UnitRepairRecord,
-} from "../../../lib/services/unit-service";
+  detailPmFixtures,
+  detailRepairFixtures,
+  detailUnitFixtures,
+} from "../../../lib/fixtures/detail-fixtures";
+import { findUnitDetail } from "../../../lib/services/unit-service";
 
 interface UnitDetailPageProps {
   params: Promise<{
@@ -19,8 +19,8 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
   const { unitId } = await params;
   const detail = findUnitDetail(unitId, {
     units: detailUnitFixtures,
-    pmLogs: pmFixtures,
-    repairLogs: repairFixtures,
+    pmLogs: detailPmFixtures,
+    repairLogs: detailRepairFixtures,
   });
 
   if (!detail) {
@@ -41,22 +41,3 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
     </main>
   );
 }
-
-const pmFixtures: UnitPmRecord[] = [
-  { unitId: "BC01-CT-01", serviceDate: "2026-01-01" },
-  { unitId: "BC01-CT-01", serviceDate: "2026-05-01" },
-  { unitId: "BC01-CT-02", serviceDate: "2026-04-15" },
-];
-
-const repairFixtures: UnitRepairRecord[] = [
-  {
-    unitId: "BC01-CT-01",
-    serviceDate: "2026-03-01",
-    issueDetail: "water leak",
-  },
-  {
-    unitId: "BC01-CT-01",
-    serviceDate: "2026-04-20",
-    issueDetail: "fan noise",
-  },
-];
