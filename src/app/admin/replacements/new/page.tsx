@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { ReplacementForm } from "../../../../features/replacements/replacement-form";
 import type { UnitId } from "../../../../lib/domain/types";
-import { detailUnitFixtures } from "../../../../lib/fixtures/detail-fixtures";
+import { loadAppDataCollections } from "../../../../lib/services/app-data";
 import type { RecordReplacementInput } from "../../../../lib/services/replacement-service";
 
 interface NewReplacementPageProps {
@@ -16,9 +16,10 @@ export default async function NewReplacementPage({
   searchParams,
 }: NewReplacementPageProps) {
   const { oldUnitId } = await searchParams;
-  const fallbackUnit = detailUnitFixtures[0];
+  const collections = await loadAppDataCollections();
+  const fallbackUnit = collections.units[0];
   const unit = oldUnitId
-    ? detailUnitFixtures.find((item) => item.unitId === oldUnitId) ?? null
+    ? collections.units.find((item) => item.unitId === oldUnitId) ?? null
     : fallbackUnit;
 
   if (!unit) {

@@ -2,10 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BranchDetail } from "../../../features/branches/branch-detail";
-import {
-  detailBranchFixtures,
-  detailUnitFixtures,
-} from "../../../lib/fixtures/detail-fixtures";
+import { loadAppDataCollections } from "../../../lib/services/app-data";
 import {
   findBranchDetail,
 } from "../../../lib/services/branch-service";
@@ -20,9 +17,10 @@ export default async function BranchDetailPage({
   params,
 }: BranchDetailPageProps) {
   const { branchCode } = await params;
+  const collections = await loadAppDataCollections();
   const detail = findBranchDetail(branchCode, {
-    branches: detailBranchFixtures,
-    units: detailUnitFixtures,
+    branches: collections.branches,
+    units: collections.units,
   });
 
   if (!detail) {

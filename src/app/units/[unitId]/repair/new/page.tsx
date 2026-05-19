@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { RepairForm } from "../../../../../features/repairs/repair-form";
-import { detailUnitFixtures } from "../../../../../lib/fixtures/detail-fixtures";
+import { loadAppDataCollections } from "../../../../../lib/services/app-data";
 import type { SaveRepairLogInput } from "../../../../../lib/services/repair-service";
 
 interface NewRepairPageProps {
@@ -13,7 +13,8 @@ interface NewRepairPageProps {
 
 export default async function NewRepairPage({ params }: NewRepairPageProps) {
   const { unitId } = await params;
-  const unit = detailUnitFixtures.find((item) => item.unitId === unitId);
+  const collections = await loadAppDataCollections();
+  const unit = collections.units.find((item) => item.unitId === unitId);
 
   if (!unit) {
     notFound();

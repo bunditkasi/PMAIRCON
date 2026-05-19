@@ -1,22 +1,18 @@
 import Link from "next/link";
 
 import { SummaryCards } from "../../features/dashboard/summary-cards";
-import {
-  detailBranchFixtures,
-  detailPmFixtures,
-  detailRepairFixtures,
-  detailUnitFixtures,
-} from "../../lib/fixtures/detail-fixtures";
+import { loadAppDataCollections } from "../../lib/services/app-data";
 import { summarizeDashboard } from "../../lib/services/dashboard-service";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const collections = await loadAppDataCollections();
   const summary = summarizeDashboard({
-    branches: detailBranchFixtures,
-    units: detailUnitFixtures,
-    pmLogs: detailPmFixtures,
-    repairLogs: detailRepairFixtures.map((log) => ({
+    branches: collections.branches,
+    units: collections.units,
+    pmLogs: collections.pmLogs,
+    repairLogs: collections.repairLogs.map((log) => ({
       unitId: log.unitId,
-      repairStatus: "IN_PROGRESS",
+      repairStatus: log.repairStatus ?? "IN_PROGRESS",
     })),
   });
 

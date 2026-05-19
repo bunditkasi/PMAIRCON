@@ -2,11 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { UnitDetail } from "../../../features/units/unit-detail";
-import {
-  detailPmFixtures,
-  detailRepairFixtures,
-  detailUnitFixtures,
-} from "../../../lib/fixtures/detail-fixtures";
+import { loadAppDataCollections } from "../../../lib/services/app-data";
 import { findUnitDetail } from "../../../lib/services/unit-service";
 
 interface UnitDetailPageProps {
@@ -17,10 +13,11 @@ interface UnitDetailPageProps {
 
 export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
   const { unitId } = await params;
+  const collections = await loadAppDataCollections();
   const detail = findUnitDetail(unitId, {
-    units: detailUnitFixtures,
-    pmLogs: detailPmFixtures,
-    repairLogs: detailRepairFixtures,
+    units: collections.units,
+    pmLogs: collections.pmLogs,
+    repairLogs: collections.repairLogs,
   });
 
   if (!detail) {

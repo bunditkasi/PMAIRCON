@@ -2,10 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PmForm } from "../../../../../features/pm/pm-form";
-import {
-  detailBranchFixtures,
-  detailUnitFixtures,
-} from "../../../../../lib/fixtures/detail-fixtures";
+import { loadAppDataCollections } from "../../../../../lib/services/app-data";
 import type { SavePmLogInput } from "../../../../../lib/services/pm-service";
 import { PM_SERVICE_STATUS } from "../../../../../lib/validation/pm-schema";
 
@@ -17,14 +14,15 @@ interface NewPmPageProps {
 
 export default async function NewPmPage({ params }: NewPmPageProps) {
   const { unitId } = await params;
-  const unit = detailUnitFixtures.find((item) => item.unitId === unitId);
+  const collections = await loadAppDataCollections();
+  const unit = collections.units.find((item) => item.unitId === unitId);
 
   if (!unit) {
     notFound();
   }
 
   const branch =
-    detailBranchFixtures.find((item) => item.branchCode === unit.branchCode) ??
+    collections.branches.find((item) => item.branchCode === unit.branchCode) ??
     null;
 
   const initialValues: SavePmLogInput = {

@@ -12,6 +12,7 @@ export interface UnitRepairRecord {
   unitId: string;
   serviceDate: string;
   issueDetail: string;
+  repairStatus?: string;
 }
 
 export interface UnitDetail {
