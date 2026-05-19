@@ -48,6 +48,12 @@ export function UnitDetail({ detail }: UnitDetailProps) {
           <p className="mt-1 text-xs text-slate-500">
             {detail.latestRepair?.serviceDate ?? ""}
           </p>
+          <Link
+            className="mt-4 inline-flex text-sm font-medium text-slate-700 underline-offset-4 hover:underline"
+            href={`/units/${detail.unit.unitId}/repair/new`}
+          >
+            Submit repair
+          </Link>
         </article>
       </div>
     </section>
