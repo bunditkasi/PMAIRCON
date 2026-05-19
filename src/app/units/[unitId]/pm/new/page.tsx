@@ -7,7 +7,7 @@ import {
   detailUnitFixtures,
 } from "../../../../../lib/fixtures/detail-fixtures";
 import type { SavePmLogInput } from "../../../../../lib/services/pm-service";
-import { pmSchema } from "../../../../../lib/validation/pm-schema";
+import { PM_SERVICE_STATUS } from "../../../../../lib/validation/pm-schema";
 
 interface NewPmPageProps {
   params: Promise<{
@@ -27,14 +27,16 @@ export default async function NewPmPage({ params }: NewPmPageProps) {
     detailBranchFixtures.find((item) => item.branchCode === unit.branchCode) ??
     null;
 
-  const initialValues: SavePmLogInput = pmSchema.parse({
+  const initialValues: SavePmLogInput = {
     branchCode: unit.branchCode,
     unitId: unit.unitId,
-    serviceDate: "2026-05-18",
-    technicianName: "Somchai",
+    serviceDate: new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Bangkok",
+    }).format(new Date()),
+    technicianName: "",
     supplierName: branch?.supplierName ?? "Klangsub Engineer",
-    serviceStatus: "DONE",
-  });
+    serviceStatus: PM_SERVICE_STATUS,
+  };
 
   return (
     <main className="min-h-screen bg-slate-100 px-6 py-12 text-slate-950">

@@ -1,4 +1,6 @@
-export type PmServiceStatus = "DONE";
+export const PM_SERVICE_STATUS = "DONE";
+
+export type PmServiceStatus = typeof PM_SERVICE_STATUS;
 
 export interface PmLogInput {
   branchCode: string;
@@ -61,8 +63,8 @@ export function parsePmLogInput(input: unknown): PmLogInput {
     throw new Error("serviceDate must be a valid YYYY-MM-DD date");
   }
 
-  if (serviceStatus !== "DONE") {
-    throw new Error("serviceStatus must be DONE");
+  if (serviceStatus !== PM_SERVICE_STATUS) {
+    throw new Error(`serviceStatus must be ${PM_SERVICE_STATUS}`);
   }
 
   return {

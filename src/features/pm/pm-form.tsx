@@ -4,6 +4,24 @@ interface PmFormProps {
   initialValues: SavePmLogInput;
 }
 
+interface FixedValueFieldProps {
+  label: string;
+  name: "branchCode" | "unitId" | "serviceStatus";
+  value: string;
+}
+
+function FixedValueField({ label, name, value }: FixedValueFieldProps) {
+  return (
+    <div className="grid gap-2 text-sm text-slate-700">
+      <span>{label}</span>
+      <div className="rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-slate-900">
+        {value}
+      </div>
+      <input defaultValue={value} name={name} type="hidden" />
+    </div>
+  );
+}
+
 export function PmForm({ initialValues }: PmFormProps) {
   return (
     <section className="rounded-2xl bg-white p-6 shadow-[0_18px_40px_rgba(16,32,51,0.12)]">
@@ -21,23 +39,17 @@ export function PmForm({ initialValues }: PmFormProps) {
       </div>
 
       <form className="mt-6 grid gap-4 md:grid-cols-2">
-        <label className="grid gap-2 text-sm text-slate-700">
-          Branch code
-          <input
-            className="rounded-xl border border-slate-300 px-3 py-2"
-            defaultValue={initialValues.branchCode}
-            name="branchCode"
-          />
-        </label>
+        <FixedValueField
+          label="Branch code"
+          name="branchCode"
+          value={initialValues.branchCode}
+        />
 
-        <label className="grid gap-2 text-sm text-slate-700">
-          Unit ID
-          <input
-            className="rounded-xl border border-slate-300 px-3 py-2"
-            defaultValue={initialValues.unitId}
-            name="unitId"
-          />
-        </label>
+        <FixedValueField
+          label="Unit ID"
+          name="unitId"
+          value={initialValues.unitId}
+        />
 
         <label className="grid gap-2 text-sm text-slate-700">
           Service date
@@ -45,6 +57,7 @@ export function PmForm({ initialValues }: PmFormProps) {
             className="rounded-xl border border-slate-300 px-3 py-2"
             defaultValue={initialValues.serviceDate}
             name="serviceDate"
+            type="date"
           />
         </label>
 
@@ -54,6 +67,7 @@ export function PmForm({ initialValues }: PmFormProps) {
             className="rounded-xl border border-slate-300 px-3 py-2"
             defaultValue={initialValues.technicianName}
             name="technicianName"
+            placeholder="Enter technician name"
           />
         </label>
 
@@ -66,14 +80,11 @@ export function PmForm({ initialValues }: PmFormProps) {
           />
         </label>
 
-        <label className="grid gap-2 text-sm text-slate-700">
-          Service status
-          <input
-            className="rounded-xl border border-slate-300 px-3 py-2"
-            defaultValue={initialValues.serviceStatus}
-            name="serviceStatus"
-          />
-        </label>
+        <FixedValueField
+          label="Service status"
+          name="serviceStatus"
+          value={initialValues.serviceStatus}
+        />
 
         <div className="md:col-span-2">
           <button
