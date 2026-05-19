@@ -1,3 +1,4 @@
+import type { UnitId } from "../domain/types";
 import type { StorageStore, StoredBranch, StoredUnit } from "./types";
 
 const SHEET_NAMES = {
@@ -67,8 +68,14 @@ function rowToStoredUnit(row: string[] | null): StoredUnit | null {
     return null;
   }
 
+  const unitId = parseUnitId(row[0]);
+
+  if (!unitId) {
+    return null;
+  }
+
   return {
-    unitId: row[0],
+    unitId,
     branchCode: row[1],
   };
 }
@@ -88,4 +95,10 @@ function hasRequiredColumns(
   }
 
   return true;
+}
+
+function parseUnitId(value: string): UnitId | null {
+  return /^[A-Za-z0-9]+-(?:CUR|AHU|CT|CS)-[A-Za-z0-9]+$/.test(value)
+    ? (value as UnitId)
+    : null;
 }

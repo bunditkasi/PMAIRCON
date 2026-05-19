@@ -12,6 +12,7 @@ describe("saveRepairLog", () => {
         createRepairLog: async (payload) => {
           writes.push(payload);
         },
+        deleteRepairLog: async () => {},
         updateUnitLatestIssueSummary: async (unitId, summary) => {
           latestIssueUpdates.push({ unitId, summary });
         },
