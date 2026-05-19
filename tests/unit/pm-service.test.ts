@@ -11,6 +11,7 @@ describe("savePmLog", () => {
         createPmLog: async (payload) => {
           writes.push(payload);
         },
+        deletePmLog: async () => {},
         updateUnitLatestPmDate: async () => {},
       },
       {
