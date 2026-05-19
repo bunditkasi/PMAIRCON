@@ -19,8 +19,10 @@ export function summarizeDashboard(
     totalBranches: input.branches.length,
     totalUnits: input.units.length,
     pmLoggedUnits: new Set(input.pmLogs.map((item) => item.unitId)).size,
-    openRepairs: input.repairLogs.filter(
-      (item) => item.repairStatus !== "DONE",
-    ).length,
+    openRepairs: new Set(
+      input.repairLogs
+        .filter((item) => item.repairStatus !== "DONE")
+        .map((item) => item.unitId),
+    ).size,
   };
 }
