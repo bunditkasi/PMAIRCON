@@ -1,16 +1,4 @@
-function buildQrTarget(
-  appBaseUrl: string,
-  pathname: string,
-) {
-  return new URL(pathname, `${appBaseUrl}/`).toString();
-}
-
-export function buildBranchQrTarget(appBaseUrl: string, branchCode: string) {
-  return buildQrTarget(
-    appBaseUrl,
-    `branches/${encodeURIComponent(branchCode)}`,
-  );
-}
+import { buildBranchQrTarget } from "../../../../../lib/qr/targets";
 
 interface BranchQrRouteProps {
   params: Promise<{

@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 import type { SaveRepairLogInput } from "../../lib/services/repair-service";
 
 interface RepairFormProps {
@@ -23,6 +27,8 @@ function FixedValueField({ label, name, value }: FixedValueFieldProps) {
 }
 
 export function RepairForm({ initialValues }: RepairFormProps) {
+  const [isSuccess, setIsSuccess] = useState(false);
+
   return (
     <section className="rounded-2xl bg-white p-6 shadow-[0_18px_40px_rgba(16,32,51,0.12)]">
       <div className="border-b border-slate-200 pb-4">
@@ -38,7 +44,13 @@ export function RepairForm({ initialValues }: RepairFormProps) {
         </p>
       </div>
 
-      <form className="mt-6 grid gap-4 md:grid-cols-2">
+      <form
+        className="mt-6 grid gap-4 md:grid-cols-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setIsSuccess(true);
+        }}
+      >
         <FixedValueField
           label="Branch code"
           name="branchCode"
@@ -57,6 +69,7 @@ export function RepairForm({ initialValues }: RepairFormProps) {
             className="rounded-xl border border-slate-300 px-3 py-2"
             defaultValue={initialValues.serviceDate}
             name="serviceDate"
+            required
             type="date"
           />
         </label>
@@ -67,6 +80,7 @@ export function RepairForm({ initialValues }: RepairFormProps) {
             className="rounded-xl border border-slate-300 px-3 py-2"
             defaultValue={initialValues.issueCategory}
             name="issueCategory"
+            required
           />
         </label>
 
@@ -77,6 +91,7 @@ export function RepairForm({ initialValues }: RepairFormProps) {
             defaultValue={initialValues.issueDetail}
             name="issueDetail"
             placeholder="Describe the issue found"
+            required
           />
         </label>
 
@@ -86,18 +101,27 @@ export function RepairForm({ initialValues }: RepairFormProps) {
             className="rounded-xl border border-slate-300 px-3 py-2"
             defaultValue={initialValues.repairStatus}
             name="repairStatus"
+            required
           />
         </label>
 
         <div className="md:col-span-2">
           <button
-            className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
-            disabled
+            className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white"
             type="submit"
           >
             Save repair
           </button>
         </div>
+
+        {isSuccess ? (
+          <p
+            aria-live="polite"
+            className="md:col-span-2 text-sm font-medium text-emerald-700"
+          >
+            Repair saved
+          </p>
+        ) : null}
       </form>
     </section>
   );

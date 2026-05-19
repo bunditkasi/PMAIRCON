@@ -1,13 +1,4 @@
-function buildQrTarget(
-  appBaseUrl: string,
-  pathname: string,
-) {
-  return new URL(pathname, `${appBaseUrl}/`).toString();
-}
-
-export function buildUnitQrTarget(appBaseUrl: string, unitId: string) {
-  return buildQrTarget(appBaseUrl, `units/${encodeURIComponent(unitId)}`);
-}
+import { buildUnitQrTarget } from "../../../../../lib/qr/targets";
 
 interface UnitQrRouteProps {
   params: Promise<{

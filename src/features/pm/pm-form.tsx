@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 import type { SavePmLogInput } from "../../lib/services/pm-service";
 
 interface PmFormProps {
@@ -23,6 +27,8 @@ function FixedValueField({ label, name, value }: FixedValueFieldProps) {
 }
 
 export function PmForm({ initialValues }: PmFormProps) {
+  const [isSuccess, setIsSuccess] = useState(false);
+
   return (
     <section className="rounded-2xl bg-white p-6 shadow-[0_18px_40px_rgba(16,32,51,0.12)]">
       <div className="border-b border-slate-200 pb-4">
@@ -38,7 +44,13 @@ export function PmForm({ initialValues }: PmFormProps) {
         </p>
       </div>
 
-      <form className="mt-6 grid gap-4 md:grid-cols-2">
+      <form
+        className="mt-6 grid gap-4 md:grid-cols-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setIsSuccess(true);
+        }}
+      >
         <FixedValueField
           label="Branch code"
           name="branchCode"
@@ -57,6 +69,7 @@ export function PmForm({ initialValues }: PmFormProps) {
             className="rounded-xl border border-slate-300 px-3 py-2"
             defaultValue={initialValues.serviceDate}
             name="serviceDate"
+            required
             type="date"
           />
         </label>
@@ -68,6 +81,7 @@ export function PmForm({ initialValues }: PmFormProps) {
             defaultValue={initialValues.technicianName}
             name="technicianName"
             placeholder="Enter technician name"
+            required
           />
         </label>
 
@@ -77,6 +91,7 @@ export function PmForm({ initialValues }: PmFormProps) {
             className="rounded-xl border border-slate-300 px-3 py-2"
             defaultValue={initialValues.supplierName}
             name="supplierName"
+            required
           />
         </label>
 
@@ -88,13 +103,21 @@ export function PmForm({ initialValues }: PmFormProps) {
 
         <div className="md:col-span-2">
           <button
-            className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
-            disabled
+            className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white"
             type="submit"
           >
             Save PM
           </button>
         </div>
+
+        {isSuccess ? (
+          <p
+            aria-live="polite"
+            className="md:col-span-2 text-sm font-medium text-emerald-700"
+          >
+            PM saved
+          </p>
+        ) : null}
       </form>
     </section>
   );

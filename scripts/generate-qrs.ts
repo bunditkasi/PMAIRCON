@@ -1,7 +1,6 @@
 import { fileURLToPath } from "node:url";
 
-import { buildBranchQrTarget } from "../src/app/api/qr/branch/[branchCode]/route";
-import { buildUnitQrTarget } from "../src/app/api/qr/unit/[unitId]/route";
+import { buildBranchQrTarget, buildUnitQrTarget } from "../src/lib/qr/targets";
 
 export interface GenerateQrRow {
   id: string;

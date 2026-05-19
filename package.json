@@ -9,7 +9,11 @@
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium",
+    "bootstrap:sheet": "tsx scripts/bootstrap-google-sheet.ts",
+    "generate:qrs": "tsx scripts/generate-qrs.ts",
+    "import:source": "tsx scripts/import-source-data.ts"
   },
   "dependencies": {
     "next": "15.5.18",
@@ -19,6 +23,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.3.1",
+    "@playwright/test": "^1.60.0",
     "@testing-library/jest-dom": "6.6.3",
     "@testing-library/react": "16.3.0",
     "@types/node": "22.15.29",
@@ -30,6 +35,7 @@
     "jsdom": "26.1.0",
     "postcss": "8.5.4",
     "tailwindcss": "3.4.17",
+    "tsx": "^4.20.6",
     "typescript": "5.8.3",
     "vitest": "3.2.4"
   }

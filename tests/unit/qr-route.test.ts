@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildUnitQrTarget } from "../../src/app/api/qr/unit/[unitId]/route";
+import { buildUnitQrTarget } from "../../src/lib/qr/targets";
 
 describe("buildUnitQrTarget", () => {
   it("builds a unit URL from the configured base url", () => {
