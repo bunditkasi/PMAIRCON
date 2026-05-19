@@ -70,20 +70,30 @@ export function mapSheetRowsToCollections(input: {
   pmLogs: string[][];
   repairLogs: string[][];
 }): LiveSheetCollections {
-  return {
-    branches: rowsToObjects(input.branches)
+  const branches = dedupeByKey(
+    rowsToObjects(input.branches)
       .filter((row) => row.branch_code)
       .map((row) => ({
         branchCode: row.branch_code,
         outletName: row.outlet_name,
         supplierName: row.supplier_name,
       })),
-    units: rowsToObjects(input.units)
+    (branch) => branch.branchCode,
+  );
+
+  const units = dedupeByKey(
+    rowsToObjects(input.units)
       .filter((row) => row.unit_id && row.branch_code)
       .map((row) => ({
         unitId: row.unit_id,
         branchCode: row.branch_code,
       })),
+    (unit) => unit.unitId,
+  );
+
+  return {
+    branches,
+    units,
     pmLogs: rowsToObjects(input.pmLogs)
       .filter((row) => row.unit_id && row.service_date)
       .map((row) => ({
@@ -214,6 +224,21 @@ async function fetchSheetValues(
   const payload = (await response.json()) as { values?: string[][] };
 
   return payload.values ?? [];
+}
+
+function dedupeByKey<T>(rows: T[], getKey: (row: T) => string): T[] {
+  const seen = new Set<string>();
+
+  return rows.filter((row) => {
+    const key = getKey(row);
+
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
 }
 
 function signJwt(

@@ -58,6 +58,42 @@ describe("mapSheetRowsToCollections", () => {
       ],
     });
   });
+
+  it("dedupes duplicate branches and units by identifier", () => {
+    const collections = mapSheetRowsToCollections({
+      branches: [
+        ["branch_code", "outlet_name", "supplier_name"],
+        ["BC01", "SAPS", "Supplier A"],
+        ["BC01", "SAPS", "Supplier A"],
+        ["BC02", "BANG", "Supplier B"],
+      ],
+      units: [
+        ["unit_id", "branch_code"],
+        ["BC01-CT-01", "BC01"],
+        ["BC01-CT-01", "BC01"],
+        ["BC02-CS-01", "BC02"],
+      ],
+      pmLogs: [["unit_id", "service_date"]],
+      repairLogs: [["unit_id", "service_date", "issue_detail", "repair_status"]],
+    });
+
+    expect(collections.branches).toEqual([
+      {
+        branchCode: "BC01",
+        outletName: "SAPS",
+        supplierName: "Supplier A",
+      },
+      {
+        branchCode: "BC02",
+        outletName: "BANG",
+        supplierName: "Supplier B",
+      },
+    ]);
+    expect(collections.units).toEqual([
+      { unitId: "BC01-CT-01", branchCode: "BC01" },
+      { unitId: "BC02-CS-01", branchCode: "BC02" },
+    ]);
+  });
 });
 
 describe("readGoogleSheetsRuntimeConfig", () => {
