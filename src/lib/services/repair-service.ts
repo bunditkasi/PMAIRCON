@@ -7,6 +7,7 @@ export type SaveRepairLogInput = RepairLogInput;
 
 export interface SaveRepairLogDeps {
   createRepairLog: (payload: RepairLogInput) => Promise<void>;
+  deleteRepairLog: (payload: RepairLogInput) => Promise<void>;
   updateUnitLatestIssueSummary: (
     unitId: string,
     summary: string,
@@ -20,7 +21,26 @@ export async function saveRepairLog(
   const payload = repairSchema.parse(input);
 
   await deps.createRepairLog(payload);
-  await deps.updateUnitLatestIssueSummary(payload.unitId, payload.issueDetail);
+
+  try {
+    await deps.updateUnitLatestIssueSummary(payload.unitId, payload.issueDetail);
+  } catch (updateError) {
+    try {
+      await deps.deleteRepairLog(payload);
+    } catch (rollbackError) {
+      throw new Error(
+        "Failed to update latest issue summary and roll back repair log",
+        {
+          cause: {
+            updateError,
+            rollbackError,
+          },
+        },
+      );
+    }
+
+    throw updateError;
+  }
 
   return {
     latestIssueSummary: payload.issueDetail,

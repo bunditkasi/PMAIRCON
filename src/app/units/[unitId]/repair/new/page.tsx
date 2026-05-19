@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { RepairForm } from "../../../../../features/repairs/repair-form";
 import { detailUnitFixtures } from "../../../../../lib/fixtures/detail-fixtures";
 import type { SaveRepairLogInput } from "../../../../../lib/services/repair-service";
-import { repairSchema } from "../../../../../lib/validation/repair-schema";
 
 interface NewRepairPageProps {
   params: Promise<{
@@ -20,14 +19,16 @@ export default async function NewRepairPage({ params }: NewRepairPageProps) {
     notFound();
   }
 
-  const initialValues: SaveRepairLogInput = repairSchema.parse({
+  const initialValues: SaveRepairLogInput = {
     branchCode: unit.branchCode,
     unitId: unit.unitId,
-    serviceDate: "2026-05-18",
-    issueCategory: "WATER_LEAK",
-    issueDetail: "leak from indoor unit",
-    repairStatus: "DONE",
-  });
+    serviceDate: new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Bangkok",
+    }).format(new Date()),
+    issueCategory: "OTHER",
+    issueDetail: "",
+    repairStatus: "PENDING",
+  };
 
   return (
     <main className="min-h-screen bg-slate-100 px-6 py-12 text-slate-950">
