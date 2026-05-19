@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import type { BranchDetail as BranchDetailData } from "../../lib/services/branch-service";
 
 interface BranchDetailProps {
@@ -37,7 +39,12 @@ export function BranchDetail({ detail }: BranchDetailProps) {
                 key={unit.unitId}
                 className="rounded-lg border border-slate-200 px-4 py-3 text-sm text-slate-800"
               >
-                {unit.unitId}
+                <Link
+                  className="font-medium text-slate-900 underline-offset-4 hover:underline"
+                  href={`/units/${unit.unitId}`}
+                >
+                  {unit.unitId}
+                </Link>
               </li>
             ))}
           </ul>
