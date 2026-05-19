@@ -129,4 +129,23 @@ describe("service date ordering", () => {
       "2026-01-15",
     ]);
   });
+
+  it("pushes malformed calendar dates behind valid service dates instead of normalizing them", () => {
+    const detail = assembleUnitDetail(
+      { unitId: "BC01-CT-01", branchCode: "BC01" },
+      [
+        { unitId: "BC01-CT-01", serviceDate: "2026-02-31" },
+        { unitId: "BC01-CT-01", serviceDate: "2026-02-28" },
+        { unitId: "BC01-CT-01", serviceDate: "2026-03-01" },
+      ],
+      [],
+    );
+
+    expect(detail.latestPm?.serviceDate).toBe("2026-03-01");
+    expect(detail.pmHistory.map((item) => item.serviceDate)).toEqual([
+      "2026-03-01",
+      "2026-02-28",
+      "2026-02-31",
+    ]);
+  });
 });

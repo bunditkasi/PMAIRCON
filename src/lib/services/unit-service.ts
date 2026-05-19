@@ -48,7 +48,18 @@ function parseServiceDate(serviceDate: string): number | null {
       day >= 1 &&
       day <= 31
     ) {
-      return Date.UTC(year, month - 1, day);
+      const timestamp = Date.UTC(year, month - 1, day);
+      const parsedDate = new Date(timestamp);
+
+      if (
+        parsedDate.getUTCFullYear() === year &&
+        parsedDate.getUTCMonth() === month - 1 &&
+        parsedDate.getUTCDate() === day
+      ) {
+        return timestamp;
+      }
+
+      return null;
     }
   }
 
