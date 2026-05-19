@@ -1,7 +1,12 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 import { BranchDetail } from "../../../features/branches/branch-detail";
-import { assembleBranchDetail } from "../../../lib/services/branch-service";
+import {
+  findBranchDetail,
+  type BranchRecord,
+  type BranchUnitRecord,
+} from "../../../lib/services/branch-service";
 
 interface BranchDetailPageProps {
   params: Promise<{
@@ -13,14 +18,14 @@ export default async function BranchDetailPage({
   params,
 }: BranchDetailPageProps) {
   const { branchCode } = await params;
-  const detail = assembleBranchDetail(
-    {
-      branchCode,
-      outletName: "Branch data pending",
-      supplierName: "Supplier data pending",
-    },
-    [],
-  );
+  const detail = findBranchDetail(branchCode, {
+    branches: branchFixtures,
+    units: unitFixtures,
+  });
+
+  if (!detail) {
+    notFound();
+  }
 
   return (
     <main className="min-h-screen bg-slate-100 px-6 py-12 text-slate-950">
@@ -36,3 +41,23 @@ export default async function BranchDetailPage({
     </main>
   );
 }
+
+const branchFixtures: BranchRecord[] = [
+  {
+    branchCode: "BC01",
+    outletName: "SAPS",
+    supplierName: "Klangsub Engineer",
+  },
+  {
+    branchCode: "BE01",
+    outletName: "Ayutthaya",
+    supplierName: "Cooling Partner",
+  },
+];
+
+const unitFixtures: BranchUnitRecord[] = [
+  { unitId: "BC01-CT-01", branchCode: "BC01" },
+  { unitId: "BC01-CT-02", branchCode: "BC01" },
+  { unitId: "BC01-CS-01", branchCode: "BC01" },
+  { unitId: "BE01-AHU-01", branchCode: "BE01" },
+];

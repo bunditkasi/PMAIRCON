@@ -14,6 +14,11 @@ export interface BranchDetail {
   units: BranchUnitRecord[];
 }
 
+export interface BranchDetailCollections {
+  branches: BranchRecord[];
+  units: BranchUnitRecord[];
+}
+
 export function assembleBranchDetail(
   branch: BranchRecord,
   units: BranchUnitRecord[],
@@ -24,4 +29,17 @@ export function assembleBranchDetail(
       .filter((unit) => unit.branchCode === branch.branchCode)
       .map((unit) => ({ ...unit })),
   };
+}
+
+export function findBranchDetail(
+  branchCode: string,
+  { branches, units }: BranchDetailCollections,
+): BranchDetail | null {
+  const branch = branches.find((item) => item.branchCode === branchCode);
+
+  if (!branch) {
+    return null;
+  }
+
+  return assembleBranchDetail(branch, units);
 }
