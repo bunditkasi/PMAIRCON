@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import type { UnitDetail as UnitDetailData } from "../../lib/services/unit-service";
 
 interface UnitDetailProps {
@@ -28,6 +30,12 @@ export function UnitDetail({ detail }: UnitDetailProps) {
           <p className="mt-1 text-xs text-slate-500">
             {detail.pmHistory.length} PM record(s)
           </p>
+          <Link
+            className="mt-4 inline-flex text-sm font-medium text-slate-700 underline-offset-4 hover:underline"
+            href={`/units/${detail.unit.unitId}/pm/new`}
+          >
+            Submit PM
+          </Link>
         </article>
 
         <article className="rounded-xl border border-slate-200 p-4">
