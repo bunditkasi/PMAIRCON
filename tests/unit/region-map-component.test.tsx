@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { RegionMap } from "../../src/features/dashboard/region-map";
 
 describe("RegionMap", () => {
-  it("renders clickable regions, active state, and reset control", () => {
+  it("renders accessible mapped and supplemental region controls plus reset", () => {
     const onRegionSelect = vi.fn();
     const onReset = vi.fn();
 
@@ -35,28 +35,39 @@ describe("RegionMap", () => {
             completedCycleJobs: 24,
             currentCycleCompletionPercent: 30,
           },
+          {
+            region: "Metro",
+            cycleCompletionPercent: 80,
+            annualCompletionPercent: 60,
+            totalBranches: 5,
+            totalUnits: 25,
+            requiredCycleJobs: 25,
+            completedCycleJobs: 20,
+            currentCycleCompletionPercent: 80,
+          },
         ]}
       />,
     );
 
-    const activeRegionButton = screen.getByRole("button", {
-      name: /central region/i,
-    });
+    const activeRegionButton = screen.getByRole("button", { name: /central region/i });
+    const northRegionButton = screen.getByRole("button", { name: /north region/i });
+    const metroRegionButton = screen.getByRole("button", { name: /metro current cycle 80%/i });
 
     expect(
       screen.getByRole("img", { name: /thailand region heatmap/i }),
     ).toBeInTheDocument();
     expect(activeRegionButton).toHaveAttribute("aria-pressed", "true");
-    expect(
-      screen.getByRole("button", { name: /north region/i }),
-    ).toBeInTheDocument();
+    expect(northRegionButton).toBeInTheDocument();
+    expect(metroRegionButton).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /north region/i }));
+    fireEvent.click(northRegionButton);
+    fireEvent.click(metroRegionButton);
     fireEvent.click(
       screen.getByRole("button", { name: /reset region filter/i }),
     );
 
     expect(onRegionSelect).toHaveBeenCalledWith("North");
+    expect(onRegionSelect).toHaveBeenCalledWith("Metro");
     expect(onReset).toHaveBeenCalledTimes(1);
   });
 
@@ -109,8 +120,8 @@ describe("RegionMap", () => {
       name: /west region/i,
     });
 
-    expect(zeroPercentRegion).toHaveStyle({ fill: "#D73027" });
-    expect(blueAnchorRegion).toHaveStyle({ fill: "#6CB8FF" });
-    expect(interpolatedRegion).toHaveStyle({ fill: "rgb(244, 183, 134)" });
+    expect(zeroPercentRegion).toHaveStyle({ backgroundColor: "#D73027" });
+    expect(blueAnchorRegion).toHaveStyle({ backgroundColor: "#6CB8FF" });
+    expect(interpolatedRegion).toHaveStyle({ backgroundColor: "rgb(244, 183, 134)" });
   });
 });

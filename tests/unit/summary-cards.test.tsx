@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { SummaryCards } from "../../src/features/dashboard/summary-cards";
 
 describe("SummaryCards", () => {
-  it("renders raw totals alongside annual and current-cycle completion percentages", () => {
+  it("renders mapped metric values with direct completion-support copy", () => {
     render(
       <SummaryCards
         summary={{
@@ -28,7 +28,13 @@ describe("SummaryCards", () => {
     expect(screen.getByText("Open repairs")).toBeInTheDocument();
     expect(screen.getByText("Annual PM completion")).toBeInTheDocument();
     expect(screen.getByText("76.5%")).toBeInTheDocument();
+    expect(
+      screen.getByText("Share of required PM visits completed this year"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Current cycle completion")).toBeInTheDocument();
     expect(screen.getByText("48.25%")).toBeInTheDocument();
+    expect(
+      screen.getByText("Cycle 2 progress across active units"),
+    ).toBeInTheDocument();
   });
 });
