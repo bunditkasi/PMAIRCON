@@ -31,5 +31,8 @@ describe("UnitDetail", () => {
     expect(screen.getByText("Latest PM")).toBeInTheDocument();
     expect(screen.getByText("Water leak")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Submit PM" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Record replacement" }),
+    ).toHaveAttribute("href", "/admin/replacements/new?oldUnitId=BC01-CS-01");
   });
 });

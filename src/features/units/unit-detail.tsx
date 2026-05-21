@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 
 import type { UnitDetail as UnitDetailData } from "../../lib/services/unit-service";
@@ -36,6 +37,15 @@ export function UnitDetail({ detail }: UnitDetailProps) {
           secondary={detail.latestRepair?.serviceDate ?? "No repair date recorded"}
           title="Latest repair"
         />
+      </div>
+
+      <div className="mt-6 flex justify-end">
+        <Link
+          className="rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+          href={`/admin/replacements/new?oldUnitId=${detail.unit.unitId}`}
+        >
+          Record replacement
+        </Link>
       </div>
     </SectionCard>
   );

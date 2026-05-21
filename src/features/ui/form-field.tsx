@@ -1,5 +1,10 @@
 import React from "react";
-import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
+import type {
+  InputHTMLAttributes,
+  ReactNode,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from "react";
 
 interface FieldWrapperProps {
   label: string;
@@ -61,6 +66,15 @@ export function TextAreaInput(
     <textarea
       {...props}
       className={`min-h-32 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(44,91,73,0.12)] ${props.className ?? ""}`.trim()}
+    />
+  );
+}
+
+export function SelectInput(props: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select
+      {...props}
+      className={`rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(44,91,73,0.12)] ${props.className ?? ""}`.trim()}
     />
   );
 }

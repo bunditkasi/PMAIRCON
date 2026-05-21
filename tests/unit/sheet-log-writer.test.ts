@@ -173,4 +173,100 @@ describe("createGoogleSheetLogWriter", () => {
       },
     ]);
   });
+
+  it("appends replacement history, creates a successor unit, and marks the old unit replaced", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            updates: {
+              updatedRange: "Replacement_History!A2:M2",
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            updates: {
+              updatedRange: "Units!A4:U4",
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            values: [
+              ["unit_id", "branch_code", "unit_no", "unit_type", "unit_label", "brand", "btu", "model", "serial_no", "install_date", "warranty_end_date", "status", "data_source", "unit_qr_url", "latest_pm_date", "latest_repair_date", "latest_issue_summary", "replacement_flag", "note", "created_at", "updated_at"],
+              ["BC01-CS-01", "BC01", "01", "CS", "Cassette Type 01", "", "", "", "", "", "", "ACTIVE", "GENERATED_FROM_AGGREGATE", "", "", "", "", "N", "", "", ""],
+            ],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ totalUpdatedCells: 3 }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+
+    const writer = createGoogleSheetLogWriter({
+      fetchImpl,
+      getAccessToken: async () => "token-123",
+      now: () => new Date("2026-05-21T01:02:03.000Z"),
+      randomId: () => "replacement-row-1",
+      spreadsheetId: "sheet-123",
+    });
+
+    const replacementResult = await writer.appendReplacementRecord({
+      oldUnitId: "BC01-CS-01",
+      branchCode: "BC01",
+      decisionDate: "2026-05-21",
+      reason: "repair not economical",
+      newUnitId: "BC01-CS-01R",
+    });
+    const newUnitResult = await writer.createReplacementUnit({
+      oldUnitId: "BC01-CS-01",
+      branchCode: "BC01",
+      decisionDate: "2026-05-21",
+      reason: "repair not economical",
+      newUnitId: "BC01-CS-01R",
+    });
+    await writer.markUnitReplaced("BC01-CS-01", "repair not economical");
+
+    expect(replacementResult).toEqual({ rowIndex: 2 });
+    expect(newUnitResult).toEqual({ rowIndex: 4 });
+    expect(String(fetchImpl.mock.calls[0]?.[0])).toContain(
+      "/values/Replacement_History!A%3AM:append",
+    );
+    expect(String(fetchImpl.mock.calls[1]?.[0])).toContain(
+      "/values/Units!A%3AU:append",
+    );
+
+    const markCallBody = JSON.parse(String(fetchImpl.mock.calls[3]?.[1]?.body));
+
+    expect(markCallBody.data).toEqual([
+      {
+        range: "Units!L2",
+        values: [["REPLACED"]],
+      },
+      {
+        range: "Units!R2",
+        values: [["TRUE"]],
+      },
+      {
+        range: "Units!S2",
+        values: [["repair not economical"]],
+      },
+      {
+        range: "Units!U2",
+        values: [["2026-05-21T01:02:03.000Z"]],
+      },
+    ]);
+  });
 });

@@ -10,7 +10,7 @@ navigation, technician logging, and central monitoring.
 - Branch QR and unit QR target generation
 - Branch detail and unit detail pages
 - PM logging and repair logging flows for technicians
-- Replacement workflow placeholder for central team
+- Replacement workflow for central team
 - Central dashboard and health endpoint
 
 ## Setup
@@ -47,6 +47,6 @@ navigation, technician logging, and central monitoring.
 
 ## Current Scope
 
-This repo currently includes placeholder submit flows for PM, repair, and
-replacement logging so the user journey can be tested end-to-end before Google
-APIs are fully wired into writes.
+This repo now writes PM, repair, and replacement records to Google Sheets for
+the current MVP flow. Google Drive image upload and printable QR asset export
+are still separate follow-up enhancements.

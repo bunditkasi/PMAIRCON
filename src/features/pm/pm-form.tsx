@@ -26,8 +26,8 @@ export function PmForm({ initialValues }: PmFormProps) {
       title="New preventive maintenance log"
     >
       <p className="max-w-2xl border-b border-[var(--border)] pb-4 text-sm text-[var(--text-muted)]">
-          This placeholder uses the PM validation and service contract for the
-          next wiring step.
+        Submit a completed PM visit for this specific unit. The saved record
+        will update the latest PM date on the unit automatically.
       </p>
 
       <form

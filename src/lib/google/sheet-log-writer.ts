@@ -4,6 +4,11 @@ import { createGoogleAuthConfig } from "./auth";
 
 import type { PmLogRollbackToken } from "../services/pm-service";
 import type { SavePmLogInput } from "../services/pm-service";
+import type {
+  RecordReplacementInput,
+  ReplacementRecordRollbackToken,
+  ReplacementUnitRollbackToken,
+} from "../services/replacement-service";
 import type { RepairLogRollbackToken } from "../services/repair-service";
 import type { SaveRepairLogInput } from "../services/repair-service";
 
@@ -18,6 +23,8 @@ type WriterDeps = {
 
 const PM_LOG_HEADERS = 18;
 const REPAIR_LOG_HEADERS = 18;
+const REPLACEMENT_HEADERS = 13;
+const UNIT_HEADERS = 21;
 
 export function createGoogleSheetLogWriter({
   fetchImpl = fetch,
@@ -188,6 +195,137 @@ export function createGoogleSheetLogWriter({
         { range: `Units!U${rowIndex}`, values: [[now().toISOString()]] },
       ]);
     },
+
+    async appendReplacementRecord(
+      input: RecordReplacementInput,
+    ): Promise<ReplacementRecordRollbackToken> {
+      const timestamp = now().toISOString();
+      const replacementId = `REPLACE-${timestamp}-${randomId()}`;
+      const response = await withAuthJson(
+        `/values/${encodeURIComponent("Replacement_History!A:M")}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            values: [[
+              replacementId,
+              input.oldUnitId,
+              input.branchCode,
+              input.decisionDate,
+              input.reason,
+              "webapp",
+              "REPLACED",
+              input.newUnitId,
+              "",
+              "",
+              input.decisionDate,
+              "",
+              `Replacement for ${input.oldUnitId}`,
+            ]],
+          }),
+        },
+      );
+      const payload = (await response.json()) as {
+        updates?: { updatedRange?: string };
+      };
+
+      return {
+        rowIndex: parseUpdatedRowIndex(
+          payload.updates?.updatedRange,
+          "Replacement_History",
+          REPLACEMENT_HEADERS,
+        ),
+      };
+    },
+
+    async deleteReplacementRecord(
+      _input: RecordReplacementInput,
+      rollbackToken?: ReplacementRecordRollbackToken,
+    ) {
+      await deleteSheetRow(
+        fetchImpl,
+        accessTokenProvider,
+        resolvedSheetId,
+        "Replacement_History",
+        rollbackToken,
+      );
+    },
+
+    async createReplacementUnit(
+      input: RecordReplacementInput,
+    ): Promise<ReplacementUnitRollbackToken> {
+      const timestamp = now().toISOString();
+      const unitDetails = parseUnitId(input.newUnitId);
+      const response = await withAuthJson(
+        `/values/${encodeURIComponent("Units!A:U")}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            values: [[
+              input.newUnitId,
+              input.branchCode,
+              unitDetails.unitNo,
+              unitDetails.unitType,
+              unitDetails.unitLabel,
+              "",
+              "",
+              "",
+              "",
+              input.decisionDate,
+              "",
+              "ACTIVE",
+              "REPLACEMENT",
+              "",
+              "",
+              "",
+              "",
+              "",
+              `Replacement for ${input.oldUnitId}`,
+              timestamp,
+              timestamp,
+            ]],
+          }),
+        },
+      );
+      const payload = (await response.json()) as {
+        updates?: { updatedRange?: string };
+      };
+
+      return {
+        rowIndex: parseUpdatedRowIndex(
+          payload.updates?.updatedRange,
+          "Units",
+          UNIT_HEADERS,
+        ),
+      };
+    },
+
+    async deleteReplacementUnit(
+      _input: RecordReplacementInput,
+      rollbackToken?: ReplacementUnitRollbackToken,
+    ) {
+      await deleteSheetRow(
+        fetchImpl,
+        accessTokenProvider,
+        resolvedSheetId,
+        "Units",
+        rollbackToken,
+      );
+    },
+
+    async markUnitReplaced(oldUnitId: string, reason: string) {
+      const rowIndex = await findUnitRowIndex(
+        fetchImpl,
+        accessTokenProvider,
+        resolvedSheetId,
+        oldUnitId,
+      );
+      await batchUpdateValues(fetchImpl, accessTokenProvider, resolvedSheetId, [
+        { range: `Units!L${rowIndex}`, values: [["REPLACED"]] },
+        { range: `Units!R${rowIndex}`, values: [["TRUE"]] },
+        { range: `Units!S${rowIndex}`, values: [[reason]] },
+        { range: `Units!U${rowIndex}`, values: [[now().toISOString()]] },
+      ]);
+    },
   };
 }
 
@@ -305,7 +443,7 @@ async function deleteSheetRow(
   fetchImpl: typeof fetch,
   getAccessToken: () => Promise<string>,
   spreadsheetId: string,
-  sheetName: "PM_Logs" | "Repair_Logs",
+  sheetName: "PM_Logs" | "Repair_Logs" | "Replacement_History" | "Units",
   rollbackToken?: { rowIndex: number },
 ) {
   if (!rollbackToken) {
@@ -313,7 +451,12 @@ async function deleteSheetRow(
   }
 
   const accessToken = await getAccessToken();
-  const sheetId = sheetName === "PM_Logs" ? 2 : 3;
+  const sheetId = await findSheetId(
+    fetchImpl,
+    accessToken,
+    spreadsheetId,
+    sheetName,
+  );
   const response = await fetchImpl(
     `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
     {
@@ -344,6 +487,39 @@ async function deleteSheetRow(
   }
 }
 
+async function findSheetId(
+  fetchImpl: typeof fetch,
+  accessToken: string,
+  spreadsheetId: string,
+  sheetName: string,
+) {
+  const response = await fetchImpl(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets(properties(sheetId,title))`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to read sheet metadata: ${response.status}`);
+  }
+
+  const payload = (await response.json()) as {
+    sheets?: Array<{ properties?: { title?: string; sheetId?: number } }>;
+  };
+  const match = payload.sheets?.find(
+    (sheet) => sheet.properties?.title === sheetName,
+  );
+
+  if (match?.properties?.sheetId === undefined) {
+    throw new Error(`Sheet not found in metadata: ${sheetName}`);
+  }
+
+  return match.properties.sheetId;
+}
+
 function parseUpdatedRowIndex(
   updatedRange: string | undefined,
   sheetName: string,
@@ -368,6 +544,26 @@ function deriveQuarterYear(serviceDate: string) {
 
 function deriveScheduledMonth(serviceDate: string) {
   return serviceDate.split("-")[1] ?? "";
+}
+
+function parseUnitId(unitId: string) {
+  const match = unitId.match(/^[^-]+-([A-Z]+)-(.+)$/);
+
+  if (!match) {
+    return {
+      unitType: "",
+      unitNo: "",
+      unitLabel: "Replacement unit",
+    };
+  }
+
+  const [, unitType, unitNo] = match;
+
+  return {
+    unitType,
+    unitNo,
+    unitLabel: `Replacement ${unitType} ${unitNo}`,
+  };
 }
 
 function signJwt(

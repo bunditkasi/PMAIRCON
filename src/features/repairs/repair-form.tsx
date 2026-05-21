@@ -7,6 +7,7 @@ import type { SaveRepairLogInput } from "../../lib/services/repair-service";
 import {
   FieldWrapper,
   FixedValueField,
+  SelectInput,
   TextAreaInput,
   TextInput,
 } from "../ui/form-field";
@@ -27,8 +28,8 @@ export function RepairForm({ initialValues }: RepairFormProps) {
       title="New repair log"
     >
       <p className="max-w-2xl border-b border-[var(--border)] pb-4 text-sm text-[var(--text-muted)]">
-          This placeholder uses the repair validation and service contract for
-          the next wiring step.
+        Record the repair result for this unit. The latest repair date and
+        latest issue summary will update on the unit after save.
       </p>
 
       <form
@@ -92,11 +93,16 @@ export function RepairForm({ initialValues }: RepairFormProps) {
         </FieldWrapper>
 
         <FieldWrapper label="Issue category">
-          <TextInput
+          <SelectInput
             defaultValue={initialValues.issueCategory}
             name="issueCategory"
             required
-          />
+          >
+            <option value="WATER_LEAK">WATER_LEAK</option>
+            <option value="NO_COOLING">NO_COOLING</option>
+            <option value="ELECTRICAL">ELECTRICAL</option>
+            <option value="OTHER">OTHER</option>
+          </SelectInput>
         </FieldWrapper>
 
         <FieldWrapper
@@ -112,11 +118,15 @@ export function RepairForm({ initialValues }: RepairFormProps) {
         </FieldWrapper>
 
         <FieldWrapper label="Repair status">
-          <TextInput
+          <SelectInput
             defaultValue={initialValues.repairStatus}
             name="repairStatus"
             required
-          />
+          >
+            <option value="PENDING">PENDING</option>
+            <option value="IN_PROGRESS">IN_PROGRESS</option>
+            <option value="DONE">DONE</option>
+          </SelectInput>
         </FieldWrapper>
 
         <div className="md:col-span-2 flex justify-end">
