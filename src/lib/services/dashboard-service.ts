@@ -52,12 +52,22 @@ export function summarizeDashboard(
   const todayParts = parseDateParts(options.today);
   const selectedYear = options.year ?? todayParts.year;
   const activeCycleMonth = normalizeCycleMonth(todayParts.month);
+  const activeRegion = options.activeRegion ?? null;
   const branchesByCode = new Map(
     input.branches.map((branch) => [branch.branchCode, branch] as const),
   );
   const unitsById = new Map(input.units.map((unit) => [unit.unitId, unit] as const));
+  const scopedBranches = activeRegion
+    ? input.branches.filter((branch) => branch.region === activeRegion)
+    : input.branches;
+  const scopedBranchCodes = new Set(scopedBranches.map((branch) => branch.branchCode));
+  const scopedUnits = input.units.filter((unit) => scopedBranchCodes.has(unit.branchCode));
+  const scopedUnitIds = new Set(scopedUnits.map((unit) => unit.unitId));
+  const scopedRepairLogs = input.repairLogs.filter((log) => scopedUnitIds.has(log.unitId));
+  const scopedPmLogs = input.pmLogs.filter((log) => scopedUnitIds.has(log.unitId));
   const donePmLogs = input.pmLogs.filter((log) => log.serviceStatus === "DONE");
-  const activeCycleUnits = input.units.filter((unit) => {
+  const scopedDonePmLogs = scopedPmLogs.filter((log) => log.serviceStatus === "DONE");
+  const activeCycleUnits = scopedUnits.filter((unit) => {
     const branch = branchesByCode.get(unit.branchCode);
 
     return (
@@ -76,9 +86,11 @@ export function summarizeDashboard(
     );
   });
   const annualCompletionPercent = roundPercent(
-    donePmLogs.filter((log) => parseDateParts(log.serviceDate).year === selectedYear)
+    scopedDonePmLogs.filter(
+      (log) => parseDateParts(log.serviceDate).year === selectedYear,
+    )
       .length,
-    input.units.length * 3,
+    scopedUnits.length * 3,
   );
   const currentCycleCompletionPercent = roundPercent(
     completedActiveCycleLogs.length,
@@ -96,18 +108,18 @@ export function summarizeDashboard(
   });
 
   return {
-    totalBranches: input.branches.length,
-    totalUnits: input.units.length,
-    pmLoggedUnits: new Set(input.pmLogs.map((item) => item.unitId)).size,
+    totalBranches: scopedBranches.length,
+    totalUnits: scopedUnits.length,
+    pmLoggedUnits: new Set(scopedPmLogs.map((item) => item.unitId)).size,
     openRepairs: new Set(
-      input.repairLogs
+      scopedRepairLogs
         .filter((item) => item.repairStatus !== "DONE")
         .map((item) => item.unitId),
     ).size,
     annualCompletionPercent,
     currentCycleCompletionPercent,
     activeCycleMonth,
-    activeRegion: options.activeRegion ?? null,
+    activeRegion,
     regions,
   };
 }

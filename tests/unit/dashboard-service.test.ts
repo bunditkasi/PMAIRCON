@@ -225,7 +225,7 @@ describe("summarizeDashboard", () => {
     ]);
   });
 
-  it("uses the caller-provided activeRegion option without inferring it", () => {
+  it("scopes summary metrics to the caller-provided activeRegion", () => {
     const result = summarizeDashboard(
       {
         branches: [
@@ -243,11 +243,17 @@ describe("summarizeDashboard", () => {
             serviceStatus: "DONE",
           },
         ],
-        repairLogs: [],
+        repairLogs: [{ unitId: "BC01-CS-01", repairStatus: "IN_PROGRESS" }],
       },
       { today: "2026-05-21", year: 2026, activeRegion: "North" },
     );
 
+    expect(result.totalBranches).toBe(1);
+    expect(result.totalUnits).toBe(1);
+    expect(result.pmLoggedUnits).toBe(0);
+    expect(result.openRepairs).toBe(0);
+    expect(result.annualCompletionPercent).toBe(0);
+    expect(result.currentCycleCompletionPercent).toBe(0);
     expect(result.activeRegion).toBe("North");
   });
 });
