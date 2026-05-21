@@ -1,11 +1,28 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { RepairForm } from "../../src/features/repairs/repair-form";
 
 describe("RepairForm", () => {
-  it("renders issue detail textarea and success state", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("renders issue detail textarea and success state", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({ latestIssueSummary: "Leak from ceiling cassette" }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      ),
+    );
+
     render(
       <RepairForm
         initialValues={{
@@ -24,6 +41,8 @@ describe("RepairForm", () => {
     expect(
       screen.getByPlaceholderText("Describe the issue found"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Repair saved")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Repair saved")).toBeInTheDocument();
+    });
   });
 });

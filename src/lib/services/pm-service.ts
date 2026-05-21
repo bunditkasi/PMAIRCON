@@ -1,10 +1,18 @@
 import { pmSchema, type PmLogInput } from "../validation/pm-schema";
 
 export type SavePmLogInput = PmLogInput;
+export interface PmLogRollbackToken {
+  rowIndex: number;
+}
 
 export interface SavePmLogDeps {
-  createPmLog: (payload: PmLogInput) => Promise<void>;
-  deletePmLog: (payload: PmLogInput) => Promise<void>;
+  createPmLog: (
+    payload: PmLogInput,
+  ) => Promise<PmLogRollbackToken | undefined>;
+  deletePmLog: (
+    payload: PmLogInput,
+    rollbackToken?: PmLogRollbackToken,
+  ) => Promise<void>;
   updateUnitLatestPmDate: (unitId: string, serviceDate: string) => Promise<void>;
 }
 
@@ -13,14 +21,13 @@ export async function savePmLog(
   input: SavePmLogInput,
 ) {
   const payload = pmSchema.parse(input);
-
-  await deps.createPmLog(payload);
+  const rollbackToken = await deps.createPmLog(payload);
 
   try {
     await deps.updateUnitLatestPmDate(payload.unitId, payload.serviceDate);
   } catch (updateError) {
     try {
-      await deps.deletePmLog(payload);
+      await deps.deletePmLog(payload, rollbackToken);
     } catch (rollbackError) {
       throw new Error("Failed to update latest PM date and roll back PM log", {
         cause: {

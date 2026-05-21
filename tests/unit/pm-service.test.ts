@@ -10,6 +10,7 @@ describe("savePmLog", () => {
       {
         createPmLog: async (payload) => {
           writes.push(payload);
+          return undefined;
         },
         deletePmLog: async () => {},
         updateUnitLatestPmDate: async () => {},
@@ -95,8 +96,8 @@ describe("savePmLog", () => {
       supplierName: "Klangsub Engineer",
       serviceStatus: "DONE" as const,
     };
-    const createPmLog = vi.fn(async () => {});
-    const deletePmLog = vi.fn(async () => {});
+    const createPmLog = vi.fn(async () => undefined);
+    const deletePmLog = vi.fn(async () => undefined);
 
     await expect(
       savePmLog(
@@ -112,6 +113,33 @@ describe("savePmLog", () => {
     ).rejects.toThrow(updateError);
 
     expect(createPmLog).toHaveBeenCalledWith(payload);
-    expect(deletePmLog).toHaveBeenCalledWith(payload);
+    expect(deletePmLog).toHaveBeenCalledWith(payload, undefined);
+  });
+
+  it("passes a rollback token from create to delete when latest date update fails", async () => {
+    const payload = {
+      branchCode: "BC01",
+      unitId: "BC01-CT-01",
+      serviceDate: "2026-05-18",
+      technicianName: "Somchai",
+      supplierName: "Klangsub Engineer",
+      serviceStatus: "DONE" as const,
+    };
+    const deletePmLog = vi.fn(async () => undefined);
+
+    await expect(
+      savePmLog(
+        {
+          createPmLog: vi.fn(async () => ({ rowIndex: 8 })),
+          deletePmLog,
+          updateUnitLatestPmDate: vi.fn(async () => {
+            throw new Error("update failed");
+          }),
+        },
+        payload,
+      ),
+    ).rejects.toThrow("update failed");
+
+    expect(deletePmLog).toHaveBeenCalledWith(payload, { rowIndex: 8 });
   });
 });

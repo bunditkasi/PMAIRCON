@@ -17,6 +17,8 @@ interface PmFormProps {
 
 export function PmForm({ initialValues }: PmFormProps) {
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   return (
     <SectionCard
@@ -30,9 +32,41 @@ export function PmForm({ initialValues }: PmFormProps) {
 
       <form
         className="mt-6 grid gap-4 md:grid-cols-2"
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault();
-          setIsSuccess(true);
+          setErrorMessage(null);
+          setIsSubmitting(true);
+          setIsSuccess(false);
+          try {
+            const formData = new FormData(event.currentTarget);
+            const response = await fetch("/api/pm", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                branchCode: String(formData.get("branchCode") ?? ""),
+                unitId: String(formData.get("unitId") ?? ""),
+                serviceDate: String(formData.get("serviceDate") ?? ""),
+                technicianName: String(formData.get("technicianName") ?? ""),
+                supplierName: String(formData.get("supplierName") ?? ""),
+                serviceStatus: String(formData.get("serviceStatus") ?? ""),
+              }),
+            });
+
+            if (!response.ok) {
+              const payload = (await response.json()) as { error?: string };
+              setErrorMessage(payload.error ?? "Failed to save PM log");
+              setIsSubmitting(false);
+              return;
+            }
+
+            setIsSuccess(true);
+            setIsSubmitting(false);
+          } catch {
+            setErrorMessage("Failed to save PM log");
+            setIsSubmitting(false);
+          }
         }}
       >
         <FixedValueField
@@ -81,10 +115,11 @@ export function PmForm({ initialValues }: PmFormProps) {
 
         <div className="md:col-span-2 flex justify-end">
           <button
+            disabled={isSubmitting}
             className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white"
             type="submit"
           >
-            Save PM
+            {isSubmitting ? "Saving..." : "Save PM"}
           </button>
         </div>
 
@@ -94,6 +129,15 @@ export function PmForm({ initialValues }: PmFormProps) {
             className="md:col-span-2 text-sm font-medium text-emerald-700"
           >
             PM saved
+          </p>
+        ) : null}
+
+        {errorMessage ? (
+          <p
+            aria-live="polite"
+            className="md:col-span-2 text-sm font-medium text-rose-700"
+          >
+            {errorMessage}
           </p>
         ) : null}
       </form>
