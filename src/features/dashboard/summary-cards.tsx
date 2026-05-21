@@ -1,30 +1,54 @@
 import React from "react";
-import type { DashboardSummary } from "../../lib/services/dashboard-service";
+import type {
+  DashboardAnalyticsSummary,
+  DashboardSummary,
+} from "../../lib/services/dashboard-service";
 import { MetricCard } from "../ui/metric-card";
 
+type DashboardSummaryViewModel = DashboardSummary & DashboardAnalyticsSummary;
+
 interface SummaryCardsProps {
-  summary: DashboardSummary;
+  summary: DashboardSummaryViewModel;
 }
 
-const CARD_ITEMS: Array<{
-  key: keyof DashboardSummary;
-  label: string;
-}> = [
-  { key: "totalBranches", label: "Total branches" },
-  { key: "totalUnits", label: "Total units" },
-  { key: "pmLoggedUnits", label: "PM logged units" },
-  { key: "openRepairs", label: "Open repairs" },
-];
-
 export function SummaryCards({ summary }: SummaryCardsProps) {
+  const cardItems: Array<{
+    key: string;
+    label: string;
+    value: number | string;
+    accent?: "default" | "success";
+    supportingText?: string;
+  }> = [
+    { key: "totalBranches", label: "Total branches", value: summary.totalBranches },
+    { key: "totalUnits", label: "Total units", value: summary.totalUnits },
+    { key: "pmLoggedUnits", label: "PM logged units", value: summary.pmLoggedUnits },
+    { key: "openRepairs", label: "Open repairs", value: summary.openRepairs },
+    {
+      key: "annualCompletionPercent",
+      label: "Annual PM completion",
+      value: `${summary.annualCompletionPercent}%`,
+      accent: "success",
+      supportingText: "Share of required PM visits completed this year",
+    },
+    {
+      key: "currentCycleCompletionPercent",
+      label: "Current cycle completion",
+      value: `${summary.currentCycleCompletionPercent}%`,
+      accent: "success",
+      supportingText: `Cycle ${summary.activeCycleMonth} progress across active units`,
+    },
+  ];
+
   return (
     <section aria-label="Dashboard summary">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {CARD_ITEMS.map((item) => (
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {cardItems.map((item) => (
           <MetricCard
             key={item.key}
+            accent={item.accent}
             label={item.label}
-            value={summary[item.key]}
+            supportingText={item.supportingText}
+            value={item.value}
           />
         ))}
       </div>
