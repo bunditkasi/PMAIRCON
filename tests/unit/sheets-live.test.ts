@@ -147,6 +147,28 @@ describe("mapSheetRowsToCollections", () => {
       },
     ]);
   });
+
+  it("maps pmStartMonth from month when pm_start_month is absent", () => {
+    const collections = mapSheetRowsToCollections({
+      branches: [
+        ["branch_code", "outlet_name", "supplier_name", "month"],
+        ["BC01", "SAPS", "Klangsub Engineer", "2"],
+      ],
+      units: [["unit_id", "branch_code"]],
+      pmLogs: [["unit_id", "service_date"]],
+      repairLogs: [["unit_id", "service_date", "issue_detail", "repair_status"]],
+    });
+
+    expect(collections.branches).toEqual([
+      {
+        branchCode: "BC01",
+        outletName: "SAPS",
+        supplierName: "Klangsub Engineer",
+        region: "",
+        pmStartMonth: 2,
+      },
+    ]);
+  });
 });
 
 describe("readGoogleSheetsRuntimeConfig", () => {
