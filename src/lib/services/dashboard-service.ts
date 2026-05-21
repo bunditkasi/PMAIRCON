@@ -66,26 +66,22 @@ export function summarizeDashboard(
     );
   });
   const activeCycleUnitIds = new Set(activeCycleUnits.map((unit) => unit.unitId));
-  const completedActiveCycleUnitIds = new Set(
-    donePmLogs
-      .filter((log) => {
-        const serviceDate = parseDateParts(log.serviceDate);
+  const completedActiveCycleLogs = donePmLogs.filter((log) => {
+    const serviceDate = parseDateParts(log.serviceDate);
 
-        return (
-          serviceDate.year === selectedYear &&
-          normalizeCycleMonth(serviceDate.month) === activeCycleMonth &&
-          activeCycleUnitIds.has(log.unitId)
-        );
-      })
-      .map((log) => log.unitId),
-  );
+    return (
+      serviceDate.year === selectedYear &&
+      normalizeCycleMonth(serviceDate.month) === activeCycleMonth &&
+      activeCycleUnitIds.has(log.unitId)
+    );
+  });
   const annualCompletionPercent = roundPercent(
     donePmLogs.filter((log) => parseDateParts(log.serviceDate).year === selectedYear)
       .length,
     input.units.length * 3,
   );
   const currentCycleCompletionPercent = roundPercent(
-    completedActiveCycleUnitIds.size,
+    completedActiveCycleLogs.length,
     activeCycleUnits.length,
   );
   const regions = summarizeRegions({
@@ -96,7 +92,7 @@ export function summarizeDashboard(
     branchesByCode,
     selectedYear,
     activeCycleMonth,
-    completedActiveCycleUnitIds,
+    completedActiveCycleLogs,
   });
 
   return {
@@ -124,7 +120,7 @@ function summarizeRegions(input: {
   branchesByCode: Map<string, DashboardSummaryInput["branches"][number]>;
   selectedYear: number;
   activeCycleMonth: number;
-  completedActiveCycleUnitIds: Set<string>;
+  completedActiveCycleLogs: DashboardSummaryInput["pmLogs"];
 }): RegionDashboardSummary[] {
   const unitsByBranchCode = new Map<string, DashboardSummaryInput["units"]>();
 
@@ -140,14 +136,10 @@ function summarizeRegions(input: {
   }
 
   const annualCompletedJobsByRegion = new Map<string, number>();
+  const activeCycleCompletedJobsByRegion = new Map<string, number>();
 
   for (const log of input.donePmLogs) {
     const serviceDate = parseDateParts(log.serviceDate);
-
-    if (serviceDate.year !== input.selectedYear) {
-      continue;
-    }
-
     const unit = input.unitsById.get(log.unitId);
 
     if (!unit) {
@@ -161,9 +153,32 @@ function summarizeRegions(input: {
     }
 
     const regionName = branch.region || "Unassigned";
-    annualCompletedJobsByRegion.set(
+
+    if (serviceDate.year === input.selectedYear) {
+      annualCompletedJobsByRegion.set(
+        regionName,
+        (annualCompletedJobsByRegion.get(regionName) ?? 0) + 1,
+      );
+    }
+  }
+
+  for (const log of input.completedActiveCycleLogs) {
+    const unit = input.unitsById.get(log.unitId);
+
+    if (!unit) {
+      continue;
+    }
+
+    const branch = input.branchesByCode.get(unit.branchCode);
+
+    if (!branch) {
+      continue;
+    }
+
+    const regionName = branch.region || "Unassigned";
+    activeCycleCompletedJobsByRegion.set(
       regionName,
-      (annualCompletedJobsByRegion.get(regionName) ?? 0) + 1,
+      (activeCycleCompletedJobsByRegion.get(regionName) ?? 0) + 1,
     );
   }
 
@@ -175,10 +190,6 @@ function summarizeRegions(input: {
     const isActiveCycleBranch =
       branch.pmStartMonth != null &&
       normalizeCycleMonth(branch.pmStartMonth) === input.activeCycleMonth;
-    const completedCycleJobsForBranch = isActiveCycleBranch
-      ? branchUnits.filter((unit) => input.completedActiveCycleUnitIds.has(unit.unitId))
-          .length
-      : 0;
     const summary = regions.get(regionName) ?? {
       region: regionName,
       totalBranches: 0,
@@ -193,7 +204,8 @@ function summarizeRegions(input: {
     summary.totalBranches += 1;
     summary.totalUnits += branchUnits.length;
     summary.requiredCycleJobs += isActiveCycleBranch ? branchUnits.length : 0;
-    summary.completedCycleJobs += completedCycleJobsForBranch;
+    summary.completedCycleJobs +=
+      isActiveCycleBranch ? activeCycleCompletedJobsByRegion.get(regionName) ?? 0 : 0;
     summary.annualCompletionPercent = roundPercent(
       annualCompletedJobsByRegion.get(regionName) ?? 0,
       summary.totalUnits * 3,

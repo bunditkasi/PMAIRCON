@@ -145,6 +145,47 @@ describe("summarizeDashboard", () => {
     expect(result.currentCycleCompletionPercent).toBe(100);
   });
 
+  it("counts raw completed PM jobs for active-cycle completion and regional cycle summaries", () => {
+    const result = summarizeDashboard(
+      {
+        branches: [{ branchCode: "BC01", region: "Central", pmStartMonth: 1 }],
+        units: [
+          { unitId: "BC01-CS-01", branchCode: "BC01" },
+          { unitId: "BC01-CS-02", branchCode: "BC01" },
+        ],
+        pmLogs: [
+          {
+            unitId: "BC01-CS-01",
+            serviceDate: "2026-01-10",
+            serviceStatus: "DONE",
+          },
+          {
+            unitId: "BC01-CS-01",
+            serviceDate: "2026-05-10",
+            serviceStatus: "DONE",
+          },
+          {
+            unitId: "BC01-CS-02",
+            serviceDate: "2026-09-10",
+            serviceStatus: "DONE",
+          },
+        ],
+        repairLogs: [],
+      },
+      { today: "2026-05-21", year: 2026, activeRegion: "Central" },
+    );
+
+    expect(result.currentCycleCompletionPercent).toBe(150);
+    expect(result.regions).toEqual([
+      expect.objectContaining({
+        region: "Central",
+        completedCycleJobs: 3,
+        currentCycleCompletionPercent: 150,
+        cycleCompletionPercent: 150,
+      }),
+    ]);
+  });
+
   it("uses the caller-provided activeRegion option without inferring it", () => {
     const result = summarizeDashboard(
       {
