@@ -43,6 +43,9 @@ describe("RegionMap", () => {
       name: /central region/i,
     });
 
+    expect(
+      screen.getByRole("img", { name: /thailand region heatmap/i }),
+    ).toBeInTheDocument();
     expect(activeRegionButton).toHaveAttribute("aria-pressed", "true");
     expect(
       screen.getByRole("button", { name: /north region/i }),
@@ -106,8 +109,8 @@ describe("RegionMap", () => {
       name: /west region/i,
     });
 
-    expect(zeroPercentRegion).toHaveStyle({ backgroundColor: "#d73027" });
-    expect(blueAnchorRegion).toHaveStyle({ backgroundColor: "#6cb8ff" });
-    expect(interpolatedRegion).toHaveStyle({ backgroundColor: "rgb(244, 183, 134)" });
+    expect(zeroPercentRegion).toHaveStyle({ fill: "#D73027" });
+    expect(blueAnchorRegion).toHaveStyle({ fill: "#6CB8FF" });
+    expect(interpolatedRegion).toHaveStyle({ fill: "rgb(244, 183, 134)" });
   });
 });
