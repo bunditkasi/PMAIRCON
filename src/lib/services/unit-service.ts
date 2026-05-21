@@ -23,18 +23,18 @@ export interface UnitDetail {
   latestRepair: UnitRepairRecord | null;
   pmHistory: UnitPmRecord[];
   repairHistory: UnitRepairRecord[];
-  pmTableRows?: Array<{
+  pmTableRows: Array<{
     serviceDate: string;
     serviceStatus: string;
     cycleLabel: string;
   }>;
-  repairTableRows?: Array<{
+  repairTableRows: Array<{
     serviceDate: string;
     issueDetail: string;
     repairStatus: string;
   }>;
-  hasPmHistoryTable?: boolean;
-  hasRepairHistoryTable?: boolean;
+  hasPmHistoryTable: boolean;
+  hasRepairHistoryTable: boolean;
 }
 
 export interface UnitDetailCollections {
@@ -118,19 +118,25 @@ function normalizePmStartMonth(pmStartMonth?: number): number {
 
 function buildPmCycleLabel(serviceDate: string, pmStartMonth?: number): string {
   const match = serviceDate.match(/^(\d{4})[-/](\d{1,2})(?:[-/]\d{1,2})?/);
-  const yearText = match?.[1] ?? "0000";
+  const serviceYear = Number(match?.[1]);
   const serviceMonth = Number(match?.[2]);
   const normalizedStartMonth = normalizePmStartMonth(pmStartMonth);
   const normalizedServiceMonth =
     Number.isInteger(serviceMonth) && serviceMonth >= 1 && serviceMonth <= 12
       ? serviceMonth
       : normalizedStartMonth;
+  const cycleYear =
+    Number.isInteger(serviceYear) && serviceYear > 0
+      ? normalizedServiceMonth < normalizedStartMonth
+        ? serviceYear - 1
+        : serviceYear
+      : 0;
   const cycleNumber =
     Math.floor(
       ((normalizedServiceMonth - normalizedStartMonth + 12) % 12) / 4,
     ) + 1;
 
-  return `${yearText} รอบ ${cycleNumber}`;
+  return `${String(cycleYear).padStart(4, "0")} รอบ ${cycleNumber}`;
 }
 
 export function assembleUnitDetail(

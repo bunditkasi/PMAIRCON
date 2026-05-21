@@ -24,6 +24,22 @@ describe("UnitDetail", () => {
               issueDetail: "Water leak",
             },
           ],
+          pmTableRows: [
+            {
+              serviceDate: "2026-05-19",
+              serviceStatus: "DONE",
+              cycleLabel: "2026 รอบ 2",
+            },
+          ],
+          repairTableRows: [
+            {
+              serviceDate: "2026-05-18",
+              issueDetail: "Water leak",
+              repairStatus: "DONE",
+            },
+          ],
+          hasPmHistoryTable: true,
+          hasRepairHistoryTable: true,
         }}
       />,
     );

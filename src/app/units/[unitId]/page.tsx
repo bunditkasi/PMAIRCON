@@ -14,8 +14,17 @@ interface UnitDetailPageProps {
 export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
   const { unitId } = await params;
   const collections = await loadAppDataCollections();
+  const branchPmStartMonthByCode = new Map(
+    collections.branches.map((branch) => [
+      branch.branchCode,
+      branch.pmStartMonth ?? undefined,
+    ]),
+  );
   const detail = findUnitDetail(unitId, {
-    units: collections.units,
+    units: collections.units.map((unit) => ({
+      ...unit,
+      pmStartMonth: branchPmStartMonthByCode.get(unit.branchCode),
+    })),
     pmLogs: collections.pmLogs,
     repairLogs: collections.repairLogs,
   });

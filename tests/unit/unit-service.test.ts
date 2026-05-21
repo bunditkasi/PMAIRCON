@@ -60,12 +60,12 @@ describe("assembleUnitDetail", () => {
     );
 
     expect(detail.pmTableRows).toHaveLength(5);
-    expect(detail.pmTableRows![0]).toEqual({
+    expect(detail.pmTableRows[0]).toEqual({
       serviceDate: "2026-09-01",
       serviceStatus: "DONE",
       cycleLabel: "2026 รอบ 3",
     });
-    expect(detail.pmTableRows![4]).toEqual({
+    expect(detail.pmTableRows[4]).toEqual({
       serviceDate: "2025-05-01",
       serviceStatus: "DONE",
       cycleLabel: "2025 รอบ 2",
@@ -84,6 +84,36 @@ describe("assembleUnitDetail", () => {
     ]);
     expect(detail.hasPmHistoryTable).toBe(true);
     expect(detail.hasRepairHistoryTable).toBe(true);
+  });
+
+  it("keeps non-January PM years under the cycle start year", () => {
+    const detail = assembleUnitDetail(
+      { unitId: "BE01-AHU-01", branchCode: "BE01", pmStartMonth: 5 },
+      [
+        { unitId: "BE01-AHU-01", serviceDate: "2026-01-15", serviceStatus: "DONE" },
+        { unitId: "BE01-AHU-01", serviceDate: "2025-09-01", serviceStatus: "DONE" },
+        { unitId: "BE01-AHU-01", serviceDate: "2025-05-10", serviceStatus: "DONE" },
+      ],
+      [],
+    );
+
+    expect(detail.pmTableRows).toEqual([
+      {
+        serviceDate: "2026-01-15",
+        serviceStatus: "DONE",
+        cycleLabel: "2025 รอบ 3",
+      },
+      {
+        serviceDate: "2025-09-01",
+        serviceStatus: "DONE",
+        cycleLabel: "2025 รอบ 2",
+      },
+      {
+        serviceDate: "2025-05-10",
+        serviceStatus: "DONE",
+        cycleLabel: "2025 รอบ 1",
+      },
+    ]);
   });
 
   it("omits history tables when a unit has no PM or repair history", () => {
@@ -171,6 +201,34 @@ describe("findUnitDetail", () => {
     });
   });
 
+  it("uses the caller-supplied pmStartMonth when building table rows", () => {
+    const detail = findUnitDetail("BE01-AHU-01", {
+      units: [
+        {
+          unitId: "BE01-AHU-01",
+          branchCode: "BE01",
+          pmStartMonth: 5,
+        },
+      ],
+      pmLogs: [
+        {
+          unitId: "BE01-AHU-01",
+          serviceDate: "2026-01-15",
+          serviceStatus: "DONE",
+        },
+      ],
+      repairLogs: [],
+    });
+
+    expect(detail?.pmTableRows).toEqual([
+      {
+        serviceDate: "2026-01-15",
+        serviceStatus: "DONE",
+        cycleLabel: "2025 รอบ 3",
+      },
+    ]);
+  });
+
   it("returns a unit detail with no PM history when the unit has no PM logs", () => {
     const detail = findUnitDetail("BC01-CS-01", {
       units: detailUnitFixtures,
@@ -255,7 +313,7 @@ describe("service date ordering", () => {
       "2026-02-28",
       "2026-02-31",
     ]);
-    expect(detail.pmTableRows!.map((item) => item.cycleLabel)).toEqual([
+    expect(detail.pmTableRows.map((item) => item.cycleLabel)).toEqual([
       "2026 รอบ 1",
       "2026 รอบ 1",
       "2026 รอบ 1",
