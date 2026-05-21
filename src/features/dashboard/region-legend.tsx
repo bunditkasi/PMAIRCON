@@ -1,12 +1,12 @@
 import React from "react";
 
 const LEGEND_STOPS = [
-  { label: "0%", color: "#F3F4F6" },
-  { label: "30%", color: "#DCEEE4" },
-  { label: "50%", color: "#B7DDC6" },
-  { label: "70%", color: "#8AC39F" },
-  { label: "80%", color: "#5A9C76" },
-  { label: "100%", color: "#2F6B4F" },
+  { label: "0%", color: "#D73027" },
+  { label: "30%", color: "#F49AC2" },
+  { label: "50%", color: "#F3D34A" },
+  { label: "70%", color: "#6CB8FF" },
+  { label: "80%", color: "#9AD88C" },
+  { label: "100%", color: "#2A7F3F" },
 ] as const;
 
 export function RegionLegend() {

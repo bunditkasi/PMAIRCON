@@ -56,4 +56,58 @@ describe("RegionMap", () => {
     expect(onRegionSelect).toHaveBeenCalledWith("North");
     expect(onReset).toHaveBeenCalledTimes(1);
   });
+
+  it("uses the approved heatmap anchors and interpolates between them", () => {
+    render(
+      <RegionMap
+        activeRegion={null}
+        regions={[
+          {
+            region: "South",
+            cycleCompletionPercent: 0,
+            annualCompletionPercent: 10,
+            totalBranches: 8,
+            totalUnits: 64,
+            requiredCycleJobs: 64,
+            completedCycleJobs: 0,
+            currentCycleCompletionPercent: 0,
+          },
+          {
+            region: "East",
+            cycleCompletionPercent: 40,
+            annualCompletionPercent: 35,
+            totalBranches: 9,
+            totalUnits: 72,
+            requiredCycleJobs: 72,
+            completedCycleJobs: 29,
+            currentCycleCompletionPercent: 40,
+          },
+          {
+            region: "West",
+            cycleCompletionPercent: 70,
+            annualCompletionPercent: 50,
+            totalBranches: 11,
+            totalUnits: 88,
+            requiredCycleJobs: 88,
+            completedCycleJobs: 62,
+            currentCycleCompletionPercent: 70,
+          },
+        ]}
+      />,
+    );
+
+    const zeroPercentRegion = screen.getByRole("button", {
+      name: /south region/i,
+    });
+    const interpolatedRegion = screen.getByRole("button", {
+      name: /east region/i,
+    });
+    const blueAnchorRegion = screen.getByRole("button", {
+      name: /west region/i,
+    });
+
+    expect(zeroPercentRegion).toHaveStyle({ backgroundColor: "#d73027" });
+    expect(blueAnchorRegion).toHaveStyle({ backgroundColor: "#6cb8ff" });
+    expect(interpolatedRegion).toHaveStyle({ backgroundColor: "rgb(244, 183, 134)" });
+  });
 });

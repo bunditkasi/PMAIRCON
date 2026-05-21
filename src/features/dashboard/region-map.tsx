@@ -10,12 +10,12 @@ interface RegionMapProps {
 }
 
 const COLOR_STOPS = [
-  { threshold: 0, color: "#F3F4F6" },
-  { threshold: 30, color: "#DCEEE4" },
-  { threshold: 50, color: "#B7DDC6" },
-  { threshold: 70, color: "#8AC39F" },
-  { threshold: 80, color: "#5A9C76" },
-  { threshold: 100, color: "#2F6B4F" },
+  { threshold: 0, color: "#D73027" },
+  { threshold: 30, color: "#F49AC2" },
+  { threshold: 50, color: "#F3D34A" },
+  { threshold: 70, color: "#6CB8FF" },
+  { threshold: 80, color: "#9AD88C" },
+  { threshold: 100, color: "#2A7F3F" },
 ] as const;
 
 export function RegionMap({
@@ -99,15 +99,41 @@ export function RegionMap({
 
 function getRegionColor(percent: number) {
   const boundedPercent = Math.max(0, Math.min(percent, 100));
-  let selectedColor: string = COLOR_STOPS[0].color;
+  const lowerStop =
+    [...COLOR_STOPS]
+      .reverse()
+      .find((stop) => boundedPercent >= stop.threshold) ?? COLOR_STOPS[0];
+  const upperStop =
+    COLOR_STOPS.find((stop) => boundedPercent <= stop.threshold) ??
+    COLOR_STOPS[COLOR_STOPS.length - 1];
 
-  for (const stop of COLOR_STOPS) {
-    if (boundedPercent >= stop.threshold) {
-      selectedColor = stop.color;
-    }
+  if (lowerStop.threshold === upperStop.threshold) {
+    return {
+      backgroundColor: lowerStop.color,
+    };
   }
 
+  const range = upperStop.threshold - lowerStop.threshold;
+  const progress =
+    range === 0 ? 0 : (boundedPercent - lowerStop.threshold) / range;
+  const lowerRgb = hexToRgb(lowerStop.color);
+  const upperRgb = hexToRgb(upperStop.color);
+
   return {
-    backgroundColor: selectedColor,
+    backgroundColor: `rgb(${interpolateChannel(lowerRgb.r, upperRgb.r, progress)}, ${interpolateChannel(lowerRgb.g, upperRgb.g, progress)}, ${interpolateChannel(lowerRgb.b, upperRgb.b, progress)})`,
   };
+}
+
+function hexToRgb(hex: string) {
+  const normalizedHex = hex.replace("#", "");
+
+  return {
+    r: Number.parseInt(normalizedHex.slice(0, 2), 16),
+    g: Number.parseInt(normalizedHex.slice(2, 4), 16),
+    b: Number.parseInt(normalizedHex.slice(4, 6), 16),
+  };
+}
+
+function interpolateChannel(start: number, end: number, progress: number) {
+  return Math.round(start + (end - start) * progress);
 }
