@@ -44,10 +44,18 @@ describe("mapSheetRowsToCollections", () => {
           branchCode: "BC01",
           outletName: "SAPS",
           supplierName: "Klangsub Engineer",
+          region: "",
+          pmStartMonth: null,
         },
       ],
       units: [{ unitId: "BC01-CT-01", branchCode: "BC01" }],
-      pmLogs: [{ unitId: "BC01-CT-01", serviceDate: "2026-05-18" }],
+      pmLogs: [
+        {
+          unitId: "BC01-CT-01",
+          serviceDate: "2026-05-18",
+          serviceStatus: "DONE",
+        },
+      ],
       repairLogs: [
         {
           unitId: "BC01-CT-01",
@@ -82,16 +90,61 @@ describe("mapSheetRowsToCollections", () => {
         branchCode: "BC01",
         outletName: "SAPS",
         supplierName: "Supplier A",
+        region: "",
+        pmStartMonth: null,
       },
       {
         branchCode: "BC02",
         outletName: "BANG",
         supplierName: "Supplier B",
+        region: "",
+        pmStartMonth: null,
       },
     ]);
     expect(collections.units).toEqual([
       { unitId: "BC01-CT-01", branchCode: "BC01" },
       { unitId: "BC02-CS-01", branchCode: "BC02" },
+    ]);
+  });
+
+  it("includes region, pmStartMonth, and PM service status in mapped collections", () => {
+    const collections = mapSheetRowsToCollections({
+      branches: [
+        [
+          "branch_code",
+          "outlet_name",
+          "supplier_name",
+          "region",
+          "pm_start_month",
+        ],
+        ["BC01", "SAPS", "Klangsub Engineer", "Central", "1"],
+      ],
+      units: [["unit_id", "branch_code"], ["BC01-CS-01", "BC01"]],
+      pmLogs: [
+        ["unit_id", "service_date", "service_status"],
+        ["BC01-CS-01", "2026-05-21", "DONE"],
+      ],
+      repairLogs: [
+        ["unit_id", "service_date", "issue_detail", "repair_status"],
+        ["BC01-CS-01", "2026-05-21", "water leak", "DONE"],
+      ],
+    });
+
+    expect(collections.branches).toEqual([
+      {
+        branchCode: "BC01",
+        outletName: "SAPS",
+        supplierName: "Klangsub Engineer",
+        region: "Central",
+        pmStartMonth: 1,
+      },
+    ]);
+    expect(collections.pmLogs).toEqual([
+      {
+        unitId: "BC01-CS-01",
+        serviceDate: "2026-05-21",
+        serviceStatus: "DONE",
+      },
     ]);
   });
 });

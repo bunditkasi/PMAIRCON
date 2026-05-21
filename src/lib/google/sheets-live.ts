@@ -14,6 +14,8 @@ export interface LiveSheetCollections {
     branchCode: string;
     outletName: string;
     supplierName: string;
+    region?: string;
+    pmStartMonth?: number | null;
   }>;
   units: Array<{
     unitId: string;
@@ -22,6 +24,7 @@ export interface LiveSheetCollections {
   pmLogs: Array<{
     unitId: string;
     serviceDate: string;
+    serviceStatus?: string;
   }>;
   repairLogs: Array<{
     unitId: string;
@@ -77,6 +80,8 @@ export function mapSheetRowsToCollections(input: {
         branchCode: row.branch_code,
         outletName: row.outlet_name,
         supplierName: row.supplier_name,
+        region: row.region || "",
+        pmStartMonth: parseSheetMonth(row.pm_start_month || row.month),
       })),
     (branch) => branch.branchCode,
   );
@@ -99,6 +104,7 @@ export function mapSheetRowsToCollections(input: {
       .map((row) => ({
         unitId: row.unit_id,
         serviceDate: row.service_date,
+        serviceStatus: row.service_status || "DONE",
       })),
     repairLogs: rowsToObjects(input.repairLogs)
       .filter((row) => row.unit_id && row.service_date)
@@ -239,6 +245,16 @@ function dedupeByKey<T>(rows: T[], getKey: (row: T) => string): T[] {
     seen.add(key);
     return true;
   });
+}
+
+function parseSheetMonth(value: string | undefined): number | null {
+  if (!value) {
+    return null;
+  }
+
+  const month = Number.parseInt(value, 10);
+
+  return Number.isNaN(month) ? null : month;
 }
 
 function signJwt(
