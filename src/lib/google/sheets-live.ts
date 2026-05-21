@@ -252,9 +252,19 @@ function parseSheetMonth(value: string | undefined): number | null {
     return null;
   }
 
-  const month = Number.parseInt(value, 10);
+  const normalizedValue = value.trim();
 
-  return Number.isNaN(month) ? null : month;
+  if (!/^\d+$/.test(normalizedValue)) {
+    return null;
+  }
+
+  const month = Number(normalizedValue);
+
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    return null;
+  }
+
+  return month;
 }
 
 function signJwt(

@@ -169,6 +169,44 @@ describe("mapSheetRowsToCollections", () => {
       },
     ]);
   });
+
+  it("maps malformed month values to null", () => {
+    const collections = mapSheetRowsToCollections({
+      branches: [
+        ["branch_code", "outlet_name", "supplier_name", "month"],
+        ["BC01", "SAPS", "Klangsub Engineer", "2abc"],
+        ["BC02", "BANG", "Supplier B", "0"],
+        ["BC03", "PATT", "Supplier C", "13"],
+      ],
+      units: [["unit_id", "branch_code"]],
+      pmLogs: [["unit_id", "service_date"]],
+      repairLogs: [["unit_id", "service_date", "issue_detail", "repair_status"]],
+    });
+
+    expect(collections.branches).toEqual([
+      {
+        branchCode: "BC01",
+        outletName: "SAPS",
+        supplierName: "Klangsub Engineer",
+        region: "",
+        pmStartMonth: null,
+      },
+      {
+        branchCode: "BC02",
+        outletName: "BANG",
+        supplierName: "Supplier B",
+        region: "",
+        pmStartMonth: null,
+      },
+      {
+        branchCode: "BC03",
+        outletName: "PATT",
+        supplierName: "Supplier C",
+        region: "",
+        pmStartMonth: null,
+      },
+    ]);
+  });
 });
 
 describe("readGoogleSheetsRuntimeConfig", () => {
