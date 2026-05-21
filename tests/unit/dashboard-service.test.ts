@@ -65,7 +65,7 @@ describe("summarizeDashboard", () => {
     expect(result.openRepairs).toBe(1);
   });
 
-  it("calculates annual completion, active cycle completion, and regional summaries", () => {
+  it("calculates annual completion, normalized active cycle completion, and regional summaries", () => {
     const result = summarizeDashboard(
       {
         branches: [
@@ -96,14 +96,78 @@ describe("summarizeDashboard", () => {
         ],
         repairLogs: [],
       },
-      { today: "2026-05-21", year: 2026 },
+      { today: "2026-05-21", year: 2026, activeRegion: "Central" },
     );
 
     expect(result.annualCompletionPercent).toBeCloseTo(33.33, 2);
-    expect(result.currentCycleCompletionPercent).toBe(50);
+    expect(result.currentCycleCompletionPercent).toBe(100);
+    expect(result.activeRegion).toBe("Central");
     expect(result.regions).toEqual([
-      expect.objectContaining({ region: "Central", cycleCompletionPercent: 50 }),
-      expect.objectContaining({ region: "North", cycleCompletionPercent: 0 }),
+      expect.objectContaining({
+        region: "Central",
+        annualCompletionPercent: 33.33,
+        currentCycleCompletionPercent: 100,
+      }),
+      expect.objectContaining({
+        region: "North",
+        annualCompletionPercent: 33.33,
+        currentCycleCompletionPercent: 0,
+      }),
     ]);
+  });
+
+  it("matches active-cycle completion across the normalized 4-month month set", () => {
+    const result = summarizeDashboard(
+      {
+        branches: [{ branchCode: "BC01", region: "Central", pmStartMonth: 1 }],
+        units: [
+          { unitId: "BC01-CS-01", branchCode: "BC01" },
+          { unitId: "BC01-CS-02", branchCode: "BC01" },
+        ],
+        pmLogs: [
+          {
+            unitId: "BC01-CS-01",
+            serviceDate: "2026-01-10",
+            serviceStatus: "DONE",
+          },
+          {
+            unitId: "BC01-CS-02",
+            serviceDate: "2026-09-10",
+            serviceStatus: "DONE",
+          },
+        ],
+        repairLogs: [],
+      },
+      { today: "2026-05-21", year: 2026 },
+    );
+
+    expect(result.activeCycleMonth).toBe(1);
+    expect(result.currentCycleCompletionPercent).toBe(100);
+  });
+
+  it("uses the caller-provided activeRegion option without inferring it", () => {
+    const result = summarizeDashboard(
+      {
+        branches: [
+          { branchCode: "BC01", region: "Central", pmStartMonth: 1 },
+          { branchCode: "BE01", region: "North", pmStartMonth: 1 },
+        ],
+        units: [
+          { unitId: "BC01-CS-01", branchCode: "BC01" },
+          { unitId: "BE01-CS-01", branchCode: "BE01" },
+        ],
+        pmLogs: [
+          {
+            unitId: "BC01-CS-01",
+            serviceDate: "2026-05-10",
+            serviceStatus: "DONE",
+          },
+        ],
+        repairLogs: [],
+      },
+      { today: "2026-05-21", year: 2026, activeRegion: "North" },
+    );
+
+    expect(result.activeRegion).toBe("North");
   });
 });

@@ -19,6 +19,8 @@ export interface RegionDashboardSummary {
   totalUnits: number;
   requiredCycleJobs: number;
   completedCycleJobs: number;
+  annualCompletionPercent: number;
+  currentCycleCompletionPercent: number;
   cycleCompletionPercent: number;
 }
 
@@ -40,6 +42,7 @@ export interface DashboardAnalyticsSummary {
 interface DashboardSummaryOptions {
   today?: string;
   year?: number;
+  activeRegion?: string | null;
 }
 
 export function summarizeDashboard(
@@ -48,13 +51,12 @@ export function summarizeDashboard(
 ): DashboardSummary & DashboardAnalyticsSummary {
   const todayParts = parseDateParts(options.today);
   const selectedYear = options.year ?? todayParts.year;
-  const activeCalendarMonth = todayParts.month;
   const activeCycleMonth = normalizeCycleMonth(todayParts.month);
   const branchesByCode = new Map(
     input.branches.map((branch) => [branch.branchCode, branch] as const),
   );
+  const unitsById = new Map(input.units.map((unit) => [unit.unitId, unit] as const));
   const donePmLogs = input.pmLogs.filter((log) => log.serviceStatus === "DONE");
-
   const activeCycleUnits = input.units.filter((unit) => {
     const branch = branchesByCode.get(unit.branchCode);
 
@@ -71,7 +73,7 @@ export function summarizeDashboard(
 
         return (
           serviceDate.year === selectedYear &&
-          serviceDate.month === activeCalendarMonth &&
+          normalizeCycleMonth(serviceDate.month) === activeCycleMonth &&
           activeCycleUnitIds.has(log.unitId)
         );
       })
@@ -89,6 +91,10 @@ export function summarizeDashboard(
   const regions = summarizeRegions({
     branches: input.branches,
     units: input.units,
+    donePmLogs,
+    unitsById,
+    branchesByCode,
+    selectedYear,
     activeCycleMonth,
     completedActiveCycleUnitIds,
   });
@@ -105,8 +111,7 @@ export function summarizeDashboard(
     annualCompletionPercent,
     currentCycleCompletionPercent,
     activeCycleMonth,
-    activeRegion:
-      regions.find((region) => region.requiredCycleJobs > 0)?.region ?? null,
+    activeRegion: options.activeRegion ?? null,
     regions,
   };
 }
@@ -114,50 +119,90 @@ export function summarizeDashboard(
 function summarizeRegions(input: {
   branches: DashboardSummaryInput["branches"];
   units: DashboardSummaryInput["units"];
+  donePmLogs: DashboardSummaryInput["pmLogs"];
+  unitsById: Map<string, DashboardSummaryInput["units"][number]>;
+  branchesByCode: Map<string, DashboardSummaryInput["branches"][number]>;
+  selectedYear: number;
   activeCycleMonth: number;
   completedActiveCycleUnitIds: Set<string>;
 }): RegionDashboardSummary[] {
   const unitsByBranchCode = new Map<string, DashboardSummaryInput["units"]>();
 
   for (const unit of input.units) {
-    const units = unitsByBranchCode.get(unit.branchCode);
+    const existingUnits = unitsByBranchCode.get(unit.branchCode);
 
-    if (units) {
-      units.push(unit);
+    if (existingUnits) {
+      existingUnits.push(unit);
       continue;
     }
 
     unitsByBranchCode.set(unit.branchCode, [unit]);
   }
 
+  const annualCompletedJobsByRegion = new Map<string, number>();
+
+  for (const log of input.donePmLogs) {
+    const serviceDate = parseDateParts(log.serviceDate);
+
+    if (serviceDate.year !== input.selectedYear) {
+      continue;
+    }
+
+    const unit = input.unitsById.get(log.unitId);
+
+    if (!unit) {
+      continue;
+    }
+
+    const branch = input.branchesByCode.get(unit.branchCode);
+
+    if (!branch) {
+      continue;
+    }
+
+    const regionName = branch.region || "Unassigned";
+    annualCompletedJobsByRegion.set(
+      regionName,
+      (annualCompletedJobsByRegion.get(regionName) ?? 0) + 1,
+    );
+  }
+
   const regions = new Map<string, RegionDashboardSummary>();
 
   for (const branch of input.branches) {
     const regionName = branch.region || "Unassigned";
+    const branchUnits = unitsByBranchCode.get(branch.branchCode) ?? [];
+    const isActiveCycleBranch =
+      branch.pmStartMonth != null &&
+      normalizeCycleMonth(branch.pmStartMonth) === input.activeCycleMonth;
+    const completedCycleJobsForBranch = isActiveCycleBranch
+      ? branchUnits.filter((unit) => input.completedActiveCycleUnitIds.has(unit.unitId))
+          .length
+      : 0;
     const summary = regions.get(regionName) ?? {
       region: regionName,
       totalBranches: 0,
       totalUnits: 0,
       requiredCycleJobs: 0,
       completedCycleJobs: 0,
+      annualCompletionPercent: 0,
+      currentCycleCompletionPercent: 0,
       cycleCompletionPercent: 0,
     };
-    const branchUnits = unitsByBranchCode.get(branch.branchCode) ?? [];
-    const isActiveCycleBranch =
-      branch.pmStartMonth != null &&
-      normalizeCycleMonth(branch.pmStartMonth) === input.activeCycleMonth;
 
     summary.totalBranches += 1;
     summary.totalUnits += branchUnits.length;
     summary.requiredCycleJobs += isActiveCycleBranch ? branchUnits.length : 0;
-    summary.completedCycleJobs += isActiveCycleBranch
-      ? branchUnits.filter((unit) => input.completedActiveCycleUnitIds.has(unit.unitId))
-          .length
-      : 0;
-    summary.cycleCompletionPercent = roundPercent(
+    summary.completedCycleJobs += completedCycleJobsForBranch;
+    summary.annualCompletionPercent = roundPercent(
+      annualCompletedJobsByRegion.get(regionName) ?? 0,
+      summary.totalUnits * 3,
+    );
+    summary.currentCycleCompletionPercent = roundPercent(
       summary.completedCycleJobs,
       summary.requiredCycleJobs,
     );
+    summary.cycleCompletionPercent = summary.currentCycleCompletionPercent;
 
     regions.set(regionName, summary);
   }
