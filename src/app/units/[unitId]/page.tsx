@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { UnitDetail } from "../../../features/units/unit-detail";
+import { AppShell } from "../../../features/ui/app-shell";
 import { loadAppDataCollections } from "../../../lib/services/app-data";
 import { findUnitDetail } from "../../../lib/services/unit-service";
 
@@ -25,16 +25,14 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 px-6 py-12 text-slate-950">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-        <Link
-          className="text-sm font-medium text-slate-700 underline-offset-4 hover:underline"
-          href={`/branches/${detail.unit.branchCode}`}
-        >
-          Back to branch
-        </Link>
+    <AppShell
+      backHref={`/branches/${detail.unit.branchCode}`}
+      backLabel="Back to branch"
+      description="Review the latest preventive maintenance and repair activity for this unit."
+      eyebrow="Unit record"
+      title={detail.unit.unitId}
+    >
         <UnitDetail detail={detail} />
-      </div>
-    </main>
+    </AppShell>
   );
 }

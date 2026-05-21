@@ -1,6 +1,8 @@
-import Link from "next/link";
+import React from "react";
 
 import type { UnitDetail as UnitDetailData } from "../../lib/services/unit-service";
+import { SectionCard } from "../ui/section-card";
+import { StatusPanel } from "../ui/status-panel";
 
 interface UnitDetailProps {
   detail: UnitDetailData;
@@ -8,54 +10,33 @@ interface UnitDetailProps {
 
 export function UnitDetail({ detail }: UnitDetailProps) {
   return (
-    <section className="rounded-2xl bg-white p-6 shadow-[0_18px_40px_rgba(16,32,51,0.12)]">
-      <div className="flex flex-col gap-2 border-b border-slate-200 pb-4">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
-          Unit detail
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
-          {detail.unit.unitId}
-        </h1>
-        <p className="text-base text-slate-700">
+    <SectionCard
+      eyebrow="Unit detail"
+      title={detail.unit.unitId}
+    >
+      <div className="flex flex-col gap-2 border-b border-[var(--border)] pb-4">
+        <p className="text-base text-[var(--text-muted)]">
           Branch: {detail.unit.branchCode}
         </p>
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <article className="rounded-xl border border-slate-200 p-4">
-          <h2 className="text-lg font-semibold text-slate-900">Latest PM</h2>
-          <p className="mt-2 text-sm text-slate-700">
-            {detail.latestPm?.serviceDate ?? "No PM logged yet."}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
-            {detail.pmHistory.length} PM record(s)
-          </p>
-          <Link
-            className="mt-4 inline-flex text-sm font-medium text-slate-700 underline-offset-4 hover:underline"
-            href={`/units/${detail.unit.unitId}/pm/new`}
-          >
-            Submit PM
-          </Link>
-        </article>
+        <StatusPanel
+          ctaHref={`/units/${detail.unit.unitId}/pm/new`}
+          ctaLabel="Submit PM"
+          primary={detail.latestPm?.serviceDate ?? "No PM logged yet."}
+          secondary={`${detail.pmHistory.length} PM record(s)`}
+          title="Latest PM"
+        />
 
-        <article className="rounded-xl border border-slate-200 p-4">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Latest repair
-          </h2>
-          <p className="mt-2 text-sm text-slate-700">
-            {detail.latestRepair?.issueDetail ?? "No repair logged yet."}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
-            {detail.latestRepair?.serviceDate ?? ""}
-          </p>
-          <Link
-            className="mt-4 inline-flex text-sm font-medium text-slate-700 underline-offset-4 hover:underline"
-            href={`/units/${detail.unit.unitId}/repair/new`}
-          >
-            Submit repair
-          </Link>
-        </article>
+        <StatusPanel
+          ctaHref={`/units/${detail.unit.unitId}/repair/new`}
+          ctaLabel="Submit repair"
+          primary={detail.latestRepair?.issueDetail ?? "No repair logged yet."}
+          secondary={detail.latestRepair?.serviceDate ?? "No repair date recorded"}
+          title="Latest repair"
+        />
       </div>
-    </section>
+    </SectionCard>
   );
 }

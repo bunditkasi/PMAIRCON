@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { RepairForm } from "../../../../../features/repairs/repair-form";
+import { AppShell } from "../../../../../features/ui/app-shell";
 import { loadAppDataCollections } from "../../../../../lib/services/app-data";
 import type { SaveRepairLogInput } from "../../../../../lib/services/repair-service";
 
@@ -32,16 +32,14 @@ export default async function NewRepairPage({ params }: NewRepairPageProps) {
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 px-6 py-12 text-slate-950">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-        <Link
-          className="text-sm font-medium text-slate-700 underline-offset-4 hover:underline"
-          href={`/units/${unit.unitId}`}
-        >
-          Back to unit
-        </Link>
+    <AppShell
+      backHref={`/units/${unit.unitId}`}
+      backLabel="Back to unit"
+      description="Capture a repair issue in a focused, mobile-friendly workflow."
+      eyebrow="Repair log"
+      title={`Repair for ${unit.unitId}`}
+    >
         <RepairForm initialValues={initialValues} />
-      </div>
-    </main>
+    </AppShell>
   );
 }

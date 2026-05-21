@@ -2,15 +2,139 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg: #eef3ef;
+  --surface: #ffffff;
+  --surface-muted: #f4f7f4;
+  --border: #d7e0d8;
+  --text: #173128;
+  --text-muted: #5e7168;
+  --accent: #2c5b49;
+  --accent-strong: #214638;
+  --shadow-soft: 0 18px 40px rgba(29, 53, 44, 0.08);
+}
+
 * {
   box-sizing: border-box;
 }
 
 html {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI", "Trebuchet MS", Helvetica, Arial, sans-serif;
+  background: var(--bg);
 }
 
 body {
   margin: 0;
-  color: #020617;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(102, 144, 121, 0.12), transparent 28%),
+    linear-gradient(180deg, #f5f8f5 0%, var(--bg) 100%);
+}
+
+.app-root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: 3rem 1.5rem;
+}
+
+.app-shell__inner {
+  margin: 0 auto;
+  display: flex;
+  width: 100%;
+  max-width: 72rem;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.app-shell__back-link {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.app-shell__hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.app-shell__eyebrow,
+.section-card__eyebrow {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.app-shell__title,
+.section-card__title {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(2.2rem, 3vw, 3.2rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.app-shell__description {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.app-shell__content {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.section-card {
+  border: 1px solid var(--border);
+  border-radius: 1.75rem;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  padding: 1.5rem;
+}
+
+.section-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-card__header-copy {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.section-card__aside {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+  .app-shell {
+    padding: 1.5rem 1rem 2rem;
+  }
+
+  .section-card {
+    padding: 1.25rem;
+  }
+
+  .section-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

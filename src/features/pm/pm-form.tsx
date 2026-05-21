@@ -1,48 +1,32 @@
 "use client";
 
+import React from "react";
 import { useState } from "react";
 
 import type { SavePmLogInput } from "../../lib/services/pm-service";
+import {
+  FieldWrapper,
+  FixedValueField,
+  TextInput,
+} from "../ui/form-field";
+import { SectionCard } from "../ui/section-card";
 
 interface PmFormProps {
   initialValues: SavePmLogInput;
-}
-
-interface FixedValueFieldProps {
-  label: string;
-  name: "branchCode" | "unitId" | "serviceStatus";
-  value: string;
-}
-
-function FixedValueField({ label, name, value }: FixedValueFieldProps) {
-  return (
-    <div className="grid gap-2 text-sm text-slate-700">
-      <span>{label}</span>
-      <div className="rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-slate-900">
-        {value}
-      </div>
-      <input defaultValue={value} name={name} type="hidden" />
-    </div>
-  );
 }
 
 export function PmForm({ initialValues }: PmFormProps) {
   const [isSuccess, setIsSuccess] = useState(false);
 
   return (
-    <section className="rounded-2xl bg-white p-6 shadow-[0_18px_40px_rgba(16,32,51,0.12)]">
-      <div className="border-b border-slate-200 pb-4">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
-          PM form
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
-          New preventive maintenance log
-        </h1>
-        <p className="mt-2 text-sm text-slate-700">
+    <SectionCard
+      eyebrow="PM form"
+      title="New preventive maintenance log"
+    >
+      <p className="max-w-2xl border-b border-[var(--border)] pb-4 text-sm text-[var(--text-muted)]">
           This placeholder uses the PM validation and service contract for the
           next wiring step.
-        </p>
-      </div>
+      </p>
 
       <form
         className="mt-6 grid gap-4 md:grid-cols-2"
@@ -63,37 +47,31 @@ export function PmForm({ initialValues }: PmFormProps) {
           value={initialValues.unitId}
         />
 
-        <label className="grid gap-2 text-sm text-slate-700">
-          Service date
-          <input
-            className="rounded-xl border border-slate-300 px-3 py-2"
+        <FieldWrapper label="Service date">
+          <TextInput
             defaultValue={initialValues.serviceDate}
             name="serviceDate"
             required
             type="date"
           />
-        </label>
+        </FieldWrapper>
 
-        <label className="grid gap-2 text-sm text-slate-700">
-          Technician name
-          <input
-            className="rounded-xl border border-slate-300 px-3 py-2"
+        <FieldWrapper label="Technician name">
+          <TextInput
             defaultValue={initialValues.technicianName}
             name="technicianName"
             placeholder="Enter technician name"
             required
           />
-        </label>
+        </FieldWrapper>
 
-        <label className="grid gap-2 text-sm text-slate-700">
-          Supplier name
-          <input
-            className="rounded-xl border border-slate-300 px-3 py-2"
+        <FieldWrapper label="Supplier name">
+          <TextInput
             defaultValue={initialValues.supplierName}
             name="supplierName"
             required
           />
-        </label>
+        </FieldWrapper>
 
         <FixedValueField
           label="Service status"
@@ -101,9 +79,9 @@ export function PmForm({ initialValues }: PmFormProps) {
           value={initialValues.serviceStatus}
         />
 
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 flex justify-end">
           <button
-            className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white"
+            className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white"
             type="submit"
           >
             Save PM
@@ -119,6 +97,6 @@ export function PmForm({ initialValues }: PmFormProps) {
           </p>
         ) : null}
       </form>
-    </section>
+    </SectionCard>
   );
 }

@@ -1,34 +1,35 @@
 import React from "react";
 import Link from "next/link";
 
+import { AppShell } from "../features/ui/app-shell";
+import { SectionCard } from "../features/ui/section-card";
+
 export default function HomePage() {
   return (
-    <main className="grid min-h-screen place-items-center bg-slate-100 px-8 py-12 text-slate-950">
-      <div className="w-full max-w-xl rounded-2xl bg-white p-8 shadow-[0_18px_40px_rgba(16,32,51,0.12)]">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Air Conditioner PM System
-        </h1>
-        <p className="mt-3 text-base text-slate-700">
-          QR-based preventive maintenance and repair logging.
-        </p>
+    <AppShell
+      description="QR-based preventive maintenance and repair logging for branch operations."
+      eyebrow="PMAIRCON"
+      title="Air Conditioner PM System"
+    >
+      <SectionCard title="Open the workspace">
         <nav
-          className="mt-6 flex flex-wrap gap-4"
           aria-label="Primary"
+          className="flex flex-wrap gap-3"
         >
           <Link
-            className="rounded-full bg-slate-950 px-4 py-3 text-sm font-medium text-white"
+            className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white"
             href="/dashboard"
           >
-            Open Dashboard
+            Open dashboard
           </Link>
           <Link
-            className="rounded-full bg-slate-950 px-4 py-3 text-sm font-medium text-white"
+            className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--text)]"
             href="/dashboard"
           >
-            Find Branch
+            Find branch
           </Link>
         </nav>
-      </div>
-    </main>
+      </SectionCard>
+    </AppShell>
   );
 }

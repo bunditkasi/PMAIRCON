@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PmForm } from "../../../../../features/pm/pm-form";
+import { AppShell } from "../../../../../features/ui/app-shell";
 import { loadAppDataCollections } from "../../../../../lib/services/app-data";
 import type { SavePmLogInput } from "../../../../../lib/services/pm-service";
 import { PM_SERVICE_STATUS } from "../../../../../lib/validation/pm-schema";
@@ -37,16 +37,14 @@ export default async function NewPmPage({ params }: NewPmPageProps) {
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 px-6 py-12 text-slate-950">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-        <Link
-          className="text-sm font-medium text-slate-700 underline-offset-4 hover:underline"
-          href={`/units/${unit.unitId}`}
-        >
-          Back to unit
-        </Link>
+    <AppShell
+      backHref={`/units/${unit.unitId}`}
+      backLabel="Back to unit"
+      description="Capture a preventive maintenance record in a calm, operational workflow."
+      eyebrow="PM log"
+      title={`PM for ${unit.unitId}`}
+    >
         <PmForm initialValues={initialValues} />
-      </div>
-    </main>
+    </AppShell>
   );
 }
