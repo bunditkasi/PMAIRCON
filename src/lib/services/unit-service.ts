@@ -1,11 +1,13 @@
 export interface UnitRecord {
   unitId: string;
   branchCode: string;
+  pmStartMonth?: number;
 }
 
 export interface UnitPmRecord {
   unitId: string;
   serviceDate: string;
+  serviceStatus?: string;
 }
 
 export interface UnitRepairRecord {
@@ -21,6 +23,18 @@ export interface UnitDetail {
   latestRepair: UnitRepairRecord | null;
   pmHistory: UnitPmRecord[];
   repairHistory: UnitRepairRecord[];
+  pmTableRows?: Array<{
+    serviceDate: string;
+    serviceStatus: string;
+    cycleLabel: string;
+  }>;
+  repairTableRows?: Array<{
+    serviceDate: string;
+    issueDetail: string;
+    repairStatus: string;
+  }>;
+  hasPmHistoryTable?: boolean;
+  hasRepairHistoryTable?: boolean;
 }
 
 export interface UnitDetailCollections {
@@ -91,6 +105,34 @@ function sortByServiceDateDesc<T extends { serviceDate: string }>(
   return right.serviceDate.localeCompare(left.serviceDate);
 }
 
+function normalizePmStartMonth(pmStartMonth?: number): number {
+  if (!Number.isInteger(pmStartMonth)) {
+    return 1;
+  }
+
+  const startMonth = pmStartMonth as number;
+  const normalizedMonth = ((startMonth - 1) % 12 + 12) % 12;
+
+  return normalizedMonth + 1;
+}
+
+function buildPmCycleLabel(serviceDate: string, pmStartMonth?: number): string {
+  const match = serviceDate.match(/^(\d{4})[-/](\d{1,2})(?:[-/]\d{1,2})?/);
+  const yearText = match?.[1] ?? "0000";
+  const serviceMonth = Number(match?.[2]);
+  const normalizedStartMonth = normalizePmStartMonth(pmStartMonth);
+  const normalizedServiceMonth =
+    Number.isInteger(serviceMonth) && serviceMonth >= 1 && serviceMonth <= 12
+      ? serviceMonth
+      : normalizedStartMonth;
+  const cycleNumber =
+    Math.floor(
+      ((normalizedServiceMonth - normalizedStartMonth + 12) % 12) / 4,
+    ) + 1;
+
+  return `${yearText} รอบ ${cycleNumber}`;
+}
+
 export function assembleUnitDetail(
   unit: UnitRecord,
   pmLogs: UnitPmRecord[],
@@ -104,6 +146,16 @@ export function assembleUnitDetail(
     .filter((item) => item.unitId === unit.unitId)
     .map((item) => ({ ...item }))
     .sort(sortByServiceDateDesc);
+  const pmTableRows = pmHistory.slice(0, 5).map((item) => ({
+    serviceDate: item.serviceDate,
+    serviceStatus: item.serviceStatus ?? "DONE",
+    cycleLabel: buildPmCycleLabel(item.serviceDate, unit.pmStartMonth),
+  }));
+  const repairTableRows = repairHistory.slice(0, 5).map((item) => ({
+    serviceDate: item.serviceDate,
+    issueDetail: item.issueDetail,
+    repairStatus: item.repairStatus ?? "PENDING",
+  }));
 
   return {
     unit: { ...unit },
@@ -111,6 +163,10 @@ export function assembleUnitDetail(
     latestRepair: repairHistory[0] ?? null,
     pmHistory,
     repairHistory,
+    pmTableRows,
+    repairTableRows,
+    hasPmHistoryTable: pmTableRows.length > 0,
+    hasRepairHistoryTable: repairTableRows.length > 0,
   };
 }
 
