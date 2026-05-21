@@ -11,9 +11,16 @@ import {
 
 export async function loadAppDataCollections(): Promise<LiveSheetCollections> {
   return (await fetchLiveSheetCollections()) ?? {
-    branches: detailBranchFixtures,
+    branches: detailBranchFixtures.map((branch) => ({
+      ...branch,
+      region: "",
+      pmStartMonth: null,
+    })),
     units: detailUnitFixtures,
-    pmLogs: detailPmFixtures,
+    pmLogs: detailPmFixtures.map((log) => ({
+      ...log,
+      serviceStatus: "DONE",
+    })),
     repairLogs: detailRepairFixtures.map((log) => ({
       ...log,
       repairStatus: "IN_PROGRESS",

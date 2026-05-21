@@ -14,8 +14,8 @@ export interface LiveSheetCollections {
     branchCode: string;
     outletName: string;
     supplierName: string;
-    region?: string;
-    pmStartMonth?: number | null;
+    region: string;
+    pmStartMonth: number | null;
   }>;
   units: Array<{
     unitId: string;
@@ -24,7 +24,7 @@ export interface LiveSheetCollections {
   pmLogs: Array<{
     unitId: string;
     serviceDate: string;
-    serviceStatus?: string;
+    serviceStatus: string;
   }>;
   repairLogs: Array<{
     unitId: string;
