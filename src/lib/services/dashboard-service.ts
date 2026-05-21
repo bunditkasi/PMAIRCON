@@ -204,10 +204,14 @@ function summarizeRegions(input: {
     summary.totalBranches += 1;
     summary.totalUnits += branchUnits.length;
     summary.requiredCycleJobs += isActiveCycleBranch ? branchUnits.length : 0;
-    summary.completedCycleJobs +=
-      isActiveCycleBranch ? activeCycleCompletedJobsByRegion.get(regionName) ?? 0 : 0;
+    regions.set(regionName, summary);
+  }
+
+  for (const summary of regions.values()) {
+    summary.completedCycleJobs =
+      activeCycleCompletedJobsByRegion.get(summary.region) ?? 0;
     summary.annualCompletionPercent = roundPercent(
-      annualCompletedJobsByRegion.get(regionName) ?? 0,
+      annualCompletedJobsByRegion.get(summary.region) ?? 0,
       summary.totalUnits * 3,
     );
     summary.currentCycleCompletionPercent = roundPercent(
@@ -215,8 +219,6 @@ function summarizeRegions(input: {
       summary.requiredCycleJobs,
     );
     summary.cycleCompletionPercent = summary.currentCycleCompletionPercent;
-
-    regions.set(regionName, summary);
   }
 
   return [...regions.values()].sort((left, right) =>

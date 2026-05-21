@@ -186,6 +186,45 @@ describe("summarizeDashboard", () => {
     ]);
   });
 
+  it("does not overcount regional completed cycle jobs when multiple active branches share a region", () => {
+    const result = summarizeDashboard(
+      {
+        branches: [
+          { branchCode: "BC01", region: "Central", pmStartMonth: 1 },
+          { branchCode: "BC02", region: "Central", pmStartMonth: 5 },
+        ],
+        units: [
+          { unitId: "BC01-CS-01", branchCode: "BC01" },
+          { unitId: "BC02-CS-01", branchCode: "BC02" },
+        ],
+        pmLogs: [
+          {
+            unitId: "BC01-CS-01",
+            serviceDate: "2026-01-10",
+            serviceStatus: "DONE",
+          },
+          {
+            unitId: "BC02-CS-01",
+            serviceDate: "2026-05-10",
+            serviceStatus: "DONE",
+          },
+        ],
+        repairLogs: [],
+      },
+      { today: "2026-05-21", year: 2026, activeRegion: "Central" },
+    );
+
+    expect(result.currentCycleCompletionPercent).toBe(100);
+    expect(result.regions).toEqual([
+      expect.objectContaining({
+        region: "Central",
+        requiredCycleJobs: 2,
+        completedCycleJobs: 2,
+        currentCycleCompletionPercent: 100,
+      }),
+    ]);
+  });
+
   it("uses the caller-provided activeRegion option without inferring it", () => {
     const result = summarizeDashboard(
       {
