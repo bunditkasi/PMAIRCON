@@ -53,8 +53,8 @@ describe("DashboardPage", () => {
     expect(screen.getByText("Branch List")).toBeInTheDocument();
     expect(screen.getByText("MR.D.I.Y Maintenance team")).toBeInTheDocument();
     expect(
-      screen.getByText("Bundit Kasicheewin (Know)"),
-    ).toBeInTheDocument();
+      screen.queryByText("Bundit Kasicheewin (Know)"),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "BKK-01" })).toBeInTheDocument();
     expect(screen.getByText("CT = 2")).toBeInTheDocument();
     expect(screen.getByText("CUR = 1")).toBeInTheDocument();

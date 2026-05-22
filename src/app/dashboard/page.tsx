@@ -80,12 +80,6 @@ export default async function DashboardPage({
               MR.D.I.Y Maintenance team
             </p>
           </div>
-          <div className="dashboard-meta-card__row">
-            <p className="dashboard-meta-card__label">Dev Ops</p>
-            <p className="dashboard-meta-card__value">
-              Bundit Kasicheewin (Know)
-            </p>
-          </div>
         </section>
       }
     >
