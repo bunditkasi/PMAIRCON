@@ -6,8 +6,6 @@ import { RegionLegend } from "./region-legend";
 interface RegionMapProps {
   regions: RegionDashboardSummary[];
   activeRegion: string | null;
-  onRegionSelect?: (region: string) => void;
-  onReset?: () => void;
 }
 
 const COLOR_STOPS = [
@@ -86,8 +84,6 @@ const THAILAND_REGIONS: Array<{
 export function RegionMap({
   regions,
   activeRegion,
-  onRegionSelect,
-  onReset,
 }: RegionMapProps) {
   const regionsById = new Map(
     regions.map((region) => [normalizeRegionId(region.region), region] as const),
@@ -120,7 +116,6 @@ export function RegionMap({
           <Link
             className="rounded-full border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-muted)] transition hover:border-[var(--accent)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(44,91,73,0.18)]"
             href="/dashboard"
-            onClick={onReset}
           >
             Reset region filter
           </Link>
@@ -169,7 +164,6 @@ export function RegionMap({
                     aria-label={`${region.summary.region} region, ${region.summary.currentCycleCompletionPercent}% current cycle completion, ${region.summary.annualCompletionPercent}% annual completion, ${region.summary.totalUnits} units`}
                     className="absolute inset-0 overflow-hidden rounded-none border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(44,91,73,0.18)]"
                     href={regionHref(region.summary.region, isActive)}
-                    onClick={() => onRegionSelect?.(region.summary.region)}
                     style={{
                       backgroundColor: regionColor.backgroundColor,
                       clipPath: region.clipPath,
@@ -217,7 +211,6 @@ export function RegionMap({
                         aria-label={`${region.region} current cycle ${region.currentCycleCompletionPercent}%`}
                         className="w-full rounded-[1rem] border px-3 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(44,91,73,0.18)]"
                         href={regionHref(region.region, isActive)}
-                        onClick={() => onRegionSelect?.(region.region)}
                         style={{
                           backgroundColor: regionColor.backgroundColor,
                           borderColor: isActive ? "var(--accent)" : "var(--border)",
