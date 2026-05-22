@@ -49,7 +49,13 @@ describe("UnitDetail", () => {
     expect(screen.getByText("PM history")).toBeInTheDocument();
     expect(screen.getByText("Repair history")).toBeInTheDocument();
     expect(screen.getByText("2026 รอบ 2")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Submit PM" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Submit PM" })).toHaveAttribute(
+      "href",
+      "/units/BC01-CS-01/pm/new",
+    );
+    expect(
+      screen.getByRole("link", { name: "Submit repair" }),
+    ).toHaveAttribute("href", "/units/BC01-CS-01/repair/new");
     expect(
       screen.getByRole("link", { name: "Record replacement" }),
     ).toHaveAttribute("href", "/admin/replacements/new?oldUnitId=BC01-CS-01");
@@ -75,6 +81,35 @@ describe("UnitDetail", () => {
     expect(screen.queryByText("PM history")).not.toBeInTheDocument();
     expect(screen.queryByText("Repair history")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Submit PM" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Submit repair" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Submit repair" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders only the available history table when one side is empty", () => {
+    render(
+      <UnitDetail
+        detail={{
+          unit: { unitId: "BC01-CS-03", branchCode: "BC01" },
+          latestPm: { unitId: "BC01-CS-03", serviceDate: "2026-06-01" },
+          latestRepair: null,
+          pmHistory: [{ unitId: "BC01-CS-03", serviceDate: "2026-06-01" }],
+          repairHistory: [],
+          pmTableRows: [
+            {
+              serviceDate: "2026-06-01",
+              serviceStatus: "DONE",
+              cycleLabel: "2026 รอบ 2",
+            },
+          ],
+          repairTableRows: [],
+          hasPmHistoryTable: true,
+          hasRepairHistoryTable: false,
+        }}
+      />,
+    );
+
+    expect(screen.getByText("PM history")).toBeInTheDocument();
+    expect(screen.queryByText("Repair history")).not.toBeInTheDocument();
   });
 });
