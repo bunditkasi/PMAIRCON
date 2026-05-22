@@ -4,6 +4,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { PmForm } from "../../src/features/pm/pm-form";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}));
+
 describe("PmForm", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -39,6 +45,9 @@ describe("PmForm", () => {
     await waitFor(() => {
       expect(screen.getByText("Saved to Google Sheet")).toBeInTheDocument();
     });
+    expect(
+      screen.getByText("Returning to the unit page in 3 seconds..."),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Saved" })).toBeDisabled();
     expect(screen.getByRole("link", { name: "Back to unit" })).toHaveAttribute(
       "href",
@@ -77,6 +86,9 @@ describe("PmForm", () => {
         screen.getByText("This PM record was already saved"),
       ).toBeInTheDocument();
     });
+    expect(
+      screen.getByText("Returning to the unit page in 3 seconds..."),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Saved" })).toBeDisabled();
   });
 });

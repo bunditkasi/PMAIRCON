@@ -4,6 +4,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { RepairForm } from "../../src/features/repairs/repair-form";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}));
+
 describe("RepairForm", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -47,6 +53,9 @@ describe("RepairForm", () => {
     await waitFor(() => {
       expect(screen.getByText("Saved to Google Sheet")).toBeInTheDocument();
     });
+    expect(
+      screen.getByText("Returning to the unit page in 3 seconds..."),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Saved" })).toBeDisabled();
     expect(screen.getByRole("link", { name: "Back to unit" })).toHaveAttribute(
       "href",
@@ -91,6 +100,9 @@ describe("RepairForm", () => {
         screen.getByText("This repair record was already saved"),
       ).toBeInTheDocument();
     });
+    expect(
+      screen.getByText("Returning to the unit page in 3 seconds..."),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Saved" })).toBeDisabled();
   });
 });

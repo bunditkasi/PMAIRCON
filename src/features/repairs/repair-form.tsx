@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import type { SaveRepairLogInput } from "../../lib/services/repair-service";
 import {
@@ -18,6 +19,7 @@ interface RepairFormProps {
 }
 
 export function RepairForm({ initialValues }: RepairFormProps) {
+  const router = useRouter();
   const [submitState, setSubmitState] = useState<null | "saved" | "duplicate">(
     null,
   );
@@ -25,6 +27,20 @@ export function RepairForm({ initialValues }: RepairFormProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const submitGuardRef = useRef(false);
   const isLocked = isSubmitting || submitState !== null;
+
+  useEffect(() => {
+    if (!submitState) {
+      return;
+    }
+
+    const redirectTimer = window.setTimeout(() => {
+      router.push(`/units/${initialValues.unitId}`);
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(redirectTimer);
+    };
+  }, [initialValues.unitId, router, submitState]);
 
   return (
     <SectionCard
@@ -169,6 +185,9 @@ export function RepairForm({ initialValues }: RepairFormProps) {
               {submitState === "duplicate"
                 ? "No duplicate row was created."
                 : "This repair record was stored successfully."}
+            </p>
+            <p className="mt-2 text-emerald-700">
+              Returning to the unit page in 3 seconds...
             </p>
           </div>
         ) : null}
