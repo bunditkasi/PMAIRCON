@@ -17,6 +17,7 @@ export interface LiveSheetCollections {
     fullStoreName: string;
     state: string;
     startBusinessDate: string;
+    mapUrl: string;
     region: string;
     pmStartMonth: number | null;
   }>;
@@ -86,6 +87,7 @@ export function mapSheetRowsToCollections(input: {
         fullStoreName: row.full_store_name || "",
         state: row.state || "",
         startBusinessDate: row.start_business_date || "",
+        mapUrl: row.map_url || "",
         region: row.region || "",
         pmStartMonth: parseSheetMonth(row.pm_start_month || row.month),
       })),

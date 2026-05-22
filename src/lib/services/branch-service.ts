@@ -5,6 +5,7 @@ export interface BranchRecord {
   fullStoreName: string;
   state: string;
   startBusinessDate: string;
+  mapUrl: string;
 }
 
 export interface BranchUnitRecord {

@@ -19,6 +19,7 @@ describe("assembleBranchDetail", () => {
         fullStoreName: "Seacon Bangkae, Bangkok",
         state: "Bangkok",
         startBusinessDate: "2016-01-15",
+        mapUrl: "https://maps.app.goo.gl/example",
       },
       [
         { unitId: "BC01-CT-01", branchCode: "BC01" },
@@ -38,6 +39,7 @@ describe("assembleBranchDetail", () => {
       fullStoreName: "Seacon Bangkae, Bangkok",
       state: "Bangkok",
       startBusinessDate: "2016-01-15",
+      mapUrl: "https://maps.app.goo.gl/example",
     };
     const units = [{ unitId: "BC01-CT-01", branchCode: "BC01" }];
 
@@ -59,6 +61,7 @@ describe("assembleBranchDetail", () => {
         fullStoreName: "Chiang Mai Town",
         state: "Chiang Mai",
         startBusinessDate: "2019-02-01",
+        mapUrl: "",
       },
       [{ unitId: "BC01-CT-01", branchCode: "BC01" }],
     );
@@ -76,6 +79,7 @@ describe("findBranchDetail", () => {
       fullStoreName: "Seacon Bangkae, Bangkok",
       state: "Bangkok",
       startBusinessDate: "2016-01-15",
+      mapUrl: "https://maps.app.goo.gl/example",
     },
     {
       branchCode: "BE01",
@@ -84,6 +88,7 @@ describe("findBranchDetail", () => {
       fullStoreName: "Ayutthaya City Park",
       state: "Ayutthaya",
       startBusinessDate: "2017-02-01",
+      mapUrl: "",
     },
   ];
 
@@ -108,6 +113,7 @@ describe("findBranchDetail", () => {
         fullStoreName: "Seacon Bangkae, Bangkok",
         state: "Bangkok",
         startBusinessDate: "2016-01-15",
+        mapUrl: "https://maps.app.goo.gl/example",
       },
       units: [
         { unitId: "BC01-CT-01", branchCode: "BC01" },
@@ -129,11 +135,18 @@ describe("findBranchDetail", () => {
       fullStoreName: "Seacon Bangkae, Bangkok",
       state: "Bangkok",
       startBusinessDate: "2016-01-15",
+      mapUrl: "https://maps.app.goo.gl/example",
     });
     expect(detail?.units.map((unit) => unit.unitId)).toEqual([
       "BC01-CT-01",
       "BC01-CT-02",
       "BC01-CS-01",
     ]);
+  });
+
+  it("returns mapUrl with branch detail data", () => {
+    const detail = findBranchDetail("BC01", { branches, units });
+
+    expect(detail?.branch.mapUrl).toBe("https://maps.app.goo.gl/example");
   });
 });

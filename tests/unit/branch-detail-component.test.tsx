@@ -16,6 +16,7 @@ describe("BranchDetail", () => {
             fullStoreName: "Seacon Bangkae, Bangkok",
             state: "Bangkok",
             startBusinessDate: "2016-01-15",
+            mapUrl: "https://maps.app.goo.gl/example",
           },
           units: [
             { branchCode: "BC01", unitId: "BC01-CS-01" },
@@ -30,9 +31,33 @@ describe("BranchDetail", () => {
       screen.getByText("Seacon Bangkae, Bangkok, Bangkok"),
     ).toBeInTheDocument();
     expect(screen.getByText(/Start business:/i)).toBeInTheDocument();
+    const mapLink = screen.getByRole("link", { name: "Open map" });
+    expect(mapLink).toHaveAttribute("href", "https://maps.app.goo.gl/example");
+    expect(mapLink).toHaveAttribute("target", "_blank");
     expect(screen.getByText(/Klangsub Engineer/)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "BC01-CS-01" }),
     ).toBeInTheDocument();
+  });
+
+  it("hides the Open map button when branch mapUrl is missing", () => {
+    render(
+      <BranchDetail
+        detail={{
+          branch: {
+            branchCode: "BC01",
+            outletName: "SAPS",
+            supplierName: "Klangsub Engineer",
+            fullStoreName: "Seacon Bangkae, Bangkok",
+            state: "Bangkok",
+            startBusinessDate: "2016-01-15",
+            mapUrl: "",
+          },
+          units: [],
+        }}
+      />,
+    );
+
+    expect(screen.queryByRole("link", { name: "Open map" })).toBeNull();
   });
 });

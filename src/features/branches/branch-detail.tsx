@@ -35,6 +35,16 @@ export function BranchDetail({ detail }: BranchDetailProps) {
             Start business: {formattedStartBusinessDate}
           </p>
         ) : null}
+        {detail.branch.mapUrl ? (
+          <a
+            className="inline-flex w-fit items-center rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-1.5 text-sm font-medium text-[var(--text)] transition hover:-translate-y-0.5 hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            href={detail.branch.mapUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            Open map
+          </a>
+        ) : null}
         <p className="text-sm text-[var(--text-muted)]">
           Supplier: {detail.branch.supplierName || "Not assigned"}
         </p>

@@ -16,6 +16,7 @@ export const detailBranchFixtures = [
     fullStoreName: "Seacon Bangkae, Bangkok",
     state: "Bangkok",
     startBusinessDate: "2016-01-15",
+    mapUrl: "https://maps.app.goo.gl/example",
   },
   {
     branchCode: "BE01",
@@ -24,6 +25,7 @@ export const detailBranchFixtures = [
     fullStoreName: "Ayutthaya City Park",
     state: "Ayutthaya",
     startBusinessDate: "2017-02-01",
+    mapUrl: "",
   },
 ] satisfies BranchRecord[];
 

@@ -61,6 +61,7 @@ describe("mapSheetRowsToCollections", () => {
           fullStoreName: "Seacon Bangkae, Bangkok",
           state: "Bangkok",
           startBusinessDate: "2016-01-15",
+          mapUrl: "",
           region: "",
           pmStartMonth: null,
         },
@@ -110,6 +111,7 @@ describe("mapSheetRowsToCollections", () => {
         fullStoreName: "",
         state: "",
         startBusinessDate: "",
+        mapUrl: "",
         region: "",
         pmStartMonth: null,
       },
@@ -120,6 +122,7 @@ describe("mapSheetRowsToCollections", () => {
         fullStoreName: "",
         state: "",
         startBusinessDate: "",
+        mapUrl: "",
         region: "",
         pmStartMonth: null,
       },
@@ -161,6 +164,7 @@ describe("mapSheetRowsToCollections", () => {
         fullStoreName: "",
         state: "",
         startBusinessDate: "",
+        mapUrl: "",
         region: "Central",
         pmStartMonth: 1,
       },
@@ -193,6 +197,7 @@ describe("mapSheetRowsToCollections", () => {
         fullStoreName: "",
         state: "",
         startBusinessDate: "",
+        mapUrl: "",
         region: "",
         pmStartMonth: 2,
       },
@@ -220,6 +225,7 @@ describe("mapSheetRowsToCollections", () => {
         fullStoreName: "",
         state: "",
         startBusinessDate: "",
+        mapUrl: "",
         region: "",
         pmStartMonth: null,
       },
@@ -230,6 +236,7 @@ describe("mapSheetRowsToCollections", () => {
         fullStoreName: "",
         state: "",
         startBusinessDate: "",
+        mapUrl: "",
         region: "",
         pmStartMonth: null,
       },
@@ -240,6 +247,33 @@ describe("mapSheetRowsToCollections", () => {
         fullStoreName: "",
         state: "",
         startBusinessDate: "",
+        mapUrl: "",
+        region: "",
+        pmStartMonth: null,
+      },
+    ]);
+  });
+
+  it("maps map_url from branch rows into live collections", () => {
+    const collections = mapSheetRowsToCollections({
+      branches: [
+        ["branch_code", "outlet_name", "supplier_name", "map_url"],
+        ["BC01", "SAPS", "Klangsub Engineer", "https://maps.app.goo.gl/example"],
+      ],
+      units: [["unit_id", "branch_code"]],
+      pmLogs: [["unit_id", "service_date"]],
+      repairLogs: [["unit_id", "service_date", "issue_detail", "repair_status"]],
+    });
+
+    expect(collections.branches).toEqual([
+      {
+        branchCode: "BC01",
+        outletName: "SAPS",
+        supplierName: "Klangsub Engineer",
+        fullStoreName: "",
+        state: "",
+        startBusinessDate: "",
+        mapUrl: "https://maps.app.goo.gl/example",
         region: "",
         pmStartMonth: null,
       },
