@@ -1,3 +1,4 @@
+import { RegionMap } from "../../features/dashboard/region-map";
 import { SummaryCards } from "../../features/dashboard/summary-cards";
 import { AppShell } from "../../features/ui/app-shell";
 import { RecordLinkRow } from "../../features/ui/record-link-row";
@@ -7,18 +8,36 @@ import { summarizeDashboard } from "../../lib/services/dashboard-service";
 
 export default async function DashboardPage() {
   const collections = await loadAppDataCollections();
+  const todayParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const year = Number(
+    todayParts.find((part) => part.type === "year")?.value ?? "0",
+  );
+  const month = todayParts.find((part) => part.type === "month")?.value ?? "01";
+  const day = todayParts.find((part) => part.type === "day")?.value ?? "01";
+  const today = `${year.toString().padStart(4, "0")}-${month}-${day}`;
   const branchDirectory = [...collections.branches].sort((left, right) =>
     left.branchCode.localeCompare(right.branchCode),
   );
-  const summary = summarizeDashboard({
-    branches: collections.branches,
-    units: collections.units,
-    pmLogs: collections.pmLogs,
-    repairLogs: collections.repairLogs.map((log) => ({
-      unitId: log.unitId,
-      repairStatus: log.repairStatus ?? "IN_PROGRESS",
-    })),
-  });
+  const summary = summarizeDashboard(
+    {
+      branches: collections.branches,
+      units: collections.units,
+      pmLogs: collections.pmLogs,
+      repairLogs: collections.repairLogs.map((log) => ({
+        unitId: log.unitId,
+        repairStatus: log.repairStatus ?? "IN_PROGRESS",
+      })),
+    },
+    {
+      today,
+      year,
+    },
+  );
 
   return (
     <AppShell
@@ -29,6 +48,10 @@ export default async function DashboardPage() {
       description="Monitor branches, units, and current maintenance activity from one calm command center."
     >
       <SummaryCards summary={summary} />
+      <RegionMap
+        activeRegion={null}
+        regions={summary.regions}
+      />
 
       <SectionCard
         aside={`${branchDirectory.length} branches`}

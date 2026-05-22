@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { UnitDetail } from "../../src/features/units/unit-detail";
 
 describe("UnitDetail", () => {
-  it("renders latest PM, latest repair, and action links", () => {
+  it("renders latest PM, latest repair, history tables, and action links", () => {
     render(
       <UnitDetail
         detail={{
@@ -45,10 +45,36 @@ describe("UnitDetail", () => {
     );
 
     expect(screen.getByText("Latest PM")).toBeInTheDocument();
-    expect(screen.getByText("Water leak")).toBeInTheDocument();
+    expect(screen.getAllByText("Water leak")).toHaveLength(2);
+    expect(screen.getByText("PM history")).toBeInTheDocument();
+    expect(screen.getByText("Repair history")).toBeInTheDocument();
+    expect(screen.getByText("2026 รอบ 2")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Submit PM" })).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Record replacement" }),
     ).toHaveAttribute("href", "/admin/replacements/new?oldUnitId=BC01-CS-01");
+  });
+
+  it("omits each history section when its table flag is false", () => {
+    render(
+      <UnitDetail
+        detail={{
+          unit: { unitId: "BC01-CS-02", branchCode: "BC01" },
+          latestPm: null,
+          latestRepair: null,
+          pmHistory: [],
+          repairHistory: [],
+          pmTableRows: [],
+          repairTableRows: [],
+          hasPmHistoryTable: false,
+          hasRepairHistoryTable: false,
+        }}
+      />,
+    );
+
+    expect(screen.queryByText("PM history")).not.toBeInTheDocument();
+    expect(screen.queryByText("Repair history")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Submit PM" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Submit repair" })).toBeInTheDocument();
   });
 });

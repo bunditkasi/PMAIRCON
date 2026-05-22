@@ -4,6 +4,7 @@ import React from "react";
 import type { UnitDetail as UnitDetailData } from "../../lib/services/unit-service";
 import { SectionCard } from "../ui/section-card";
 import { StatusPanel } from "../ui/status-panel";
+import { HistoryTable } from "./history-table";
 
 interface UnitDetailProps {
   detail: UnitDetailData;
@@ -38,6 +39,34 @@ export function UnitDetail({ detail }: UnitDetailProps) {
           title="Latest repair"
         />
       </div>
+
+      {detail.hasPmHistoryTable || detail.hasRepairHistoryTable ? (
+        <div className="mt-6 grid gap-4 xl:grid-cols-2">
+          {detail.hasPmHistoryTable ? (
+            <HistoryTable
+              title="PM history"
+              columns={["Service date", "Status", "Cycle"]}
+              rows={detail.pmTableRows.map((row) => [
+                row.serviceDate,
+                row.serviceStatus,
+                row.cycleLabel,
+              ])}
+            />
+          ) : null}
+
+          {detail.hasRepairHistoryTable ? (
+            <HistoryTable
+              title="Repair history"
+              columns={["Service date", "Issue", "Status"]}
+              rows={detail.repairTableRows.map((row) => [
+                row.serviceDate,
+                row.issueDetail,
+                row.repairStatus,
+              ])}
+            />
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mt-6 flex justify-end">
         <Link
