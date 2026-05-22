@@ -2,6 +2,9 @@ export interface BranchRecord {
   branchCode: string;
   outletName: string;
   supplierName: string;
+  fullStoreName: string;
+  state: string;
+  startBusinessDate: string;
 }
 
 export interface BranchUnitRecord {

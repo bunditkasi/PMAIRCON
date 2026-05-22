@@ -14,6 +14,9 @@ export interface LiveSheetCollections {
     branchCode: string;
     outletName: string;
     supplierName: string;
+    fullStoreName: string;
+    state: string;
+    startBusinessDate: string;
     region: string;
     pmStartMonth: number | null;
   }>;
@@ -80,6 +83,9 @@ export function mapSheetRowsToCollections(input: {
         branchCode: row.branch_code,
         outletName: row.outlet_name,
         supplierName: row.supplier_name,
+        fullStoreName: row.full_store_name || "",
+        state: row.state || "",
+        startBusinessDate: row.start_business_date || "",
         region: row.region || "",
         pmStartMonth: parseSheetMonth(row.pm_start_month || row.month),
       })),

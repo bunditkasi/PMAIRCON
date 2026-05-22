@@ -13,6 +13,9 @@ describe("BranchDetail", () => {
             branchCode: "BC01",
             outletName: "SAPS",
             supplierName: "Klangsub Engineer",
+            fullStoreName: "Seacon Bangkae, Bangkok",
+            state: "Bangkok",
+            startBusinessDate: "2016-01-15",
           },
           units: [
             { branchCode: "BC01", unitId: "BC01-CS-01" },
@@ -23,6 +26,10 @@ describe("BranchDetail", () => {
     );
 
     expect(screen.getByRole("heading", { name: "BC01" })).toBeInTheDocument();
+    expect(
+      screen.getByText("Seacon Bangkae, Bangkok, Bangkok"),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Start business:/i)).toBeInTheDocument();
     expect(screen.getByText(/Klangsub Engineer/)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "BC01-CS-01" }),

@@ -9,6 +9,16 @@ interface BranchDetailProps {
 }
 
 export function BranchDetail({ detail }: BranchDetailProps) {
+  const branchLocation = [
+    detail.branch.fullStoreName || detail.branch.outletName,
+    detail.branch.state,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const formattedStartBusinessDate = formatBranchDate(
+    detail.branch.startBusinessDate,
+  );
+
   return (
     <SectionCard
       aside={`${detail.units.length} total`}
@@ -17,6 +27,14 @@ export function BranchDetail({ detail }: BranchDetailProps) {
     >
       <div className="grid gap-2 border-b border-[var(--border)] pb-5">
         <p className="text-lg text-[var(--text)]">{detail.branch.outletName}</p>
+        {branchLocation ? (
+          <p className="text-sm text-[var(--text)]">{branchLocation}</p>
+        ) : null}
+        {formattedStartBusinessDate ? (
+          <p className="text-sm text-[var(--text-muted)]">
+            Start business: {formattedStartBusinessDate}
+          </p>
+        ) : null}
         <p className="text-sm text-[var(--text-muted)]">
           Supplier: {detail.branch.supplierName || "Not assigned"}
         </p>
@@ -49,4 +67,25 @@ export function BranchDetail({ detail }: BranchDetailProps) {
       </div>
     </SectionCard>
   );
+}
+
+function formatBranchDate(value: string): string {
+  const normalizedValue = value.trim();
+
+  if (!normalizedValue) {
+    return "";
+  }
+
+  const parsedDate = new Date(normalizedValue);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return normalizedValue;
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "Asia/Bangkok",
+  }).format(parsedDate);
 }

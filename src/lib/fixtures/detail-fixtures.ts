@@ -13,11 +13,17 @@ export const detailBranchFixtures = [
     branchCode: "BC01",
     outletName: "SAPS",
     supplierName: "Klangsub Engineer",
+    fullStoreName: "Seacon Bangkae, Bangkok",
+    state: "Bangkok",
+    startBusinessDate: "2016-01-15",
   },
   {
     branchCode: "BE01",
     outletName: "Ayutthaya",
     supplierName: "Cooling Partner",
+    fullStoreName: "Ayutthaya City Park",
+    state: "Ayutthaya",
+    startBusinessDate: "2017-02-01",
   },
 ] satisfies BranchRecord[];
 

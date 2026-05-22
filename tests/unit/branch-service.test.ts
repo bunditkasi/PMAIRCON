@@ -16,6 +16,9 @@ describe("assembleBranchDetail", () => {
         branchCode: "BC01",
         outletName: "SAPS",
         supplierName: "Klangsub Engineer",
+        fullStoreName: "Seacon Bangkae, Bangkok",
+        state: "Bangkok",
+        startBusinessDate: "2016-01-15",
       },
       [
         { unitId: "BC01-CT-01", branchCode: "BC01" },
@@ -32,6 +35,9 @@ describe("assembleBranchDetail", () => {
       branchCode: "BC01",
       outletName: "SAPS",
       supplierName: "Klangsub Engineer",
+      fullStoreName: "Seacon Bangkae, Bangkok",
+      state: "Bangkok",
+      startBusinessDate: "2016-01-15",
     };
     const units = [{ unitId: "BC01-CT-01", branchCode: "BC01" }];
 
@@ -50,6 +56,9 @@ describe("assembleBranchDetail", () => {
         branchCode: "BZ01",
         outletName: "Chiang Mai",
         supplierName: "Northern Cooling",
+        fullStoreName: "Chiang Mai Town",
+        state: "Chiang Mai",
+        startBusinessDate: "2019-02-01",
       },
       [{ unitId: "BC01-CT-01", branchCode: "BC01" }],
     );
@@ -64,11 +73,17 @@ describe("findBranchDetail", () => {
       branchCode: "BC01",
       outletName: "SAPS",
       supplierName: "Klangsub Engineer",
+      fullStoreName: "Seacon Bangkae, Bangkok",
+      state: "Bangkok",
+      startBusinessDate: "2016-01-15",
     },
     {
       branchCode: "BE01",
       outletName: "Ayutthaya",
       supplierName: "Cooling Partner",
+      fullStoreName: "Ayutthaya City Park",
+      state: "Ayutthaya",
+      startBusinessDate: "2017-02-01",
     },
   ];
 
@@ -90,6 +105,9 @@ describe("findBranchDetail", () => {
         branchCode: "BC01",
         outletName: "SAPS",
         supplierName: "Klangsub Engineer",
+        fullStoreName: "Seacon Bangkae, Bangkok",
+        state: "Bangkok",
+        startBusinessDate: "2016-01-15",
       },
       units: [
         { unitId: "BC01-CT-01", branchCode: "BC01" },
@@ -108,6 +126,9 @@ describe("findBranchDetail", () => {
       branchCode: "BC01",
       outletName: "SAPS",
       supplierName: "Klangsub Engineer",
+      fullStoreName: "Seacon Bangkae, Bangkok",
+      state: "Bangkok",
+      startBusinessDate: "2016-01-15",
     });
     expect(detail?.units.map((unit) => unit.unitId)).toEqual([
       "BC01-CT-01",
