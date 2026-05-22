@@ -17,8 +17,8 @@ export default async function DashboardPage({
   searchParams,
 }: DashboardPageProps) {
   const params = searchParams ? await searchParams : undefined;
-  const activeRegion = params?.region?.trim() || null;
   const collections = await loadAppDataCollections();
+  const activeRegion = resolveActiveRegion(collections.branches, params?.region);
   const todayParts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Bangkok",
     year: "numeric",
@@ -90,4 +90,21 @@ export default async function DashboardPage({
       </SectionCard>
     </AppShell>
   );
+}
+
+function resolveActiveRegion(
+  branches: Array<{ region: string }>,
+  requestedRegion?: string,
+) {
+  const normalizedRequestedRegion = requestedRegion?.trim().toLowerCase();
+
+  if (!normalizedRequestedRegion) {
+    return null;
+  }
+
+  const matchedBranch = branches.find(
+    (branch) => branch.region.trim().toLowerCase() === normalizedRequestedRegion,
+  );
+
+  return matchedBranch?.region ?? null;
 }

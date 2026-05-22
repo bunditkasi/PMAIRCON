@@ -53,4 +53,34 @@ describe("DashboardPage", () => {
       screen.queryByRole("link", { name: "CNX-01" }),
     ).not.toBeInTheDocument();
   });
+
+  it("canonicalizes case-mismatched region params and ignores unknown regions", async () => {
+    const filteredPage = await DashboardPage({
+      searchParams: Promise.resolve({ region: "central" }),
+    });
+
+    const rendered = render(filteredPage);
+
+    expect(
+      screen.getByText("Showing branches in Central"),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "BKK-01" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "CNX-01" }),
+    ).not.toBeInTheDocument();
+
+    rendered.unmount();
+
+    const unfilteredPage = await DashboardPage({
+      searchParams: Promise.resolve({ region: "Unknown" }),
+    });
+
+    render(unfilteredPage);
+
+    expect(
+      screen.queryByText("Showing branches in Unknown"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "BKK-01" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "CNX-01" })).toBeInTheDocument();
+  });
 });
