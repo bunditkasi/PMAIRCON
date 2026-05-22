@@ -31,6 +31,16 @@ describe("RegionMap", () => {
             currentCycleCompletionPercent: 30,
           },
           {
+            region: "Bangkok",
+            cycleCompletionPercent: 82,
+            annualCompletionPercent: 61,
+            totalBranches: 7,
+            totalUnits: 44,
+            requiredCycleJobs: 44,
+            completedCycleJobs: 36,
+            currentCycleCompletionPercent: 82,
+          },
+          {
             region: "Metro",
             cycleCompletionPercent: 80,
             annualCompletionPercent: 60,
@@ -46,6 +56,7 @@ describe("RegionMap", () => {
 
     const activeRegionLink = screen.getByRole("link", { name: /central region/i });
     const northRegionLink = screen.getByRole("link", { name: /north region/i });
+    const bangkokRegionLink = screen.getByRole("link", { name: /bangkok region/i });
     const metroRegionLink = screen.getByRole("link", { name: /metro current cycle 80%/i });
     const resetLink = screen.getByRole("link", { name: /reset region filter/i });
 
@@ -55,6 +66,7 @@ describe("RegionMap", () => {
     expect(activeRegionLink).toHaveAttribute("aria-current", "page");
     expect(activeRegionLink).toHaveAttribute("href", "/dashboard");
     expect(northRegionLink).toHaveAttribute("href", "/dashboard?region=North");
+    expect(bangkokRegionLink).toHaveAttribute("href", "/dashboard?region=Bangkok");
     expect(metroRegionLink).toHaveAttribute("href", "/dashboard?region=Metro");
     expect(resetLink).toHaveAttribute("href", "/dashboard");
   });
@@ -108,8 +120,17 @@ describe("RegionMap", () => {
       name: /west region/i,
     });
 
-    expect(zeroPercentRegion).toHaveStyle({ backgroundColor: "#D73027" });
-    expect(blueAnchorRegion).toHaveStyle({ backgroundColor: "#6CB8FF" });
-    expect(interpolatedRegion).toHaveStyle({ backgroundColor: "rgb(244, 183, 134)" });
+    expect(zeroPercentRegion.querySelector("path")).toHaveAttribute(
+      "fill",
+      "#D73027",
+    );
+    expect(blueAnchorRegion.querySelector("path")).toHaveAttribute(
+      "fill",
+      "#6CB8FF",
+    );
+    expect(interpolatedRegion.querySelector("path")).toHaveAttribute(
+      "fill",
+      "rgb(244, 183, 134)",
+    );
   });
 });
