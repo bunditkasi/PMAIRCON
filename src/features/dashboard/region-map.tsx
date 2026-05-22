@@ -48,9 +48,9 @@ export function RegionMap({
   return (
     <section
       aria-label="Region performance"
-      className="grid gap-4 xl:grid-cols-[1.45fr_0.85fr]"
+      className="grid w-full min-w-0 gap-4"
     >
-      <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)]">
+      <div className="w-full min-w-0 rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)]">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-[var(--text)]">
@@ -68,14 +68,14 @@ export function RegionMap({
           </Link>
         </div>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-[1.25rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(244,248,246,0.92),rgba(233,240,236,0.88))] p-4">
-            <div className="mx-auto w-full max-w-[25rem] overflow-hidden rounded-[1rem] border border-[rgba(110,126,120,0.12)] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.92),rgba(235,242,238,0.92))] p-3">
+        <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(19rem,0.9fr)]">
+          <div className="min-w-0 rounded-[1.25rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(244,248,246,0.92),rgba(233,240,236,0.88))] p-4">
+            <div className="mx-auto w-full max-w-[42rem] overflow-hidden rounded-[1rem] border border-[rgba(110,126,120,0.12)] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.92),rgba(235,242,238,0.92))] p-3">
               <svg
                 aria-label="Thailand region heatmap"
                 role="img"
                 viewBox={THAILAND_MAP_VIEWBOX}
-                className="h-full w-full"
+                className="h-auto w-full"
               >
                 {mappedRegions.map((region) => {
                   const isActive = activeRegion === region.summary.region;
@@ -126,7 +126,7 @@ export function RegionMap({
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <section className="rounded-[1.25rem] border border-[var(--border)] bg-[var(--surface-muted)]/60 p-4">
               <h3 className="text-sm font-semibold text-[var(--text)]">
                 Region snapshot
