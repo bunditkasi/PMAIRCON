@@ -31,6 +31,15 @@ export default async function DashboardPage({
   const month = todayParts.find((part) => part.type === "month")?.value ?? "01";
   const day = todayParts.find((part) => part.type === "day")?.value ?? "01";
   const today = `${year.toString().padStart(4, "0")}-${month}-${day}`;
+  const lastUpdatedAt = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Bangkok",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date());
   const summary = summarizeDashboard(
     {
       branches: collections.branches,
@@ -59,6 +68,26 @@ export default async function DashboardPage({
       eyebrow="Central dashboard"
       title="Aircon PM monitoring"
       description="Monitor branches, units, and current maintenance activity from one calm command center."
+      heroAside={
+        <section className="dashboard-meta-card" aria-label="Dashboard metadata">
+          <div className="dashboard-meta-card__row">
+            <p className="dashboard-meta-card__label">Last update</p>
+            <p className="dashboard-meta-card__value">{lastUpdatedAt}</p>
+          </div>
+          <div className="dashboard-meta-card__row">
+            <p className="dashboard-meta-card__label">Prepared by</p>
+            <p className="dashboard-meta-card__value">
+              MR.D.I.Y Maintenance team
+            </p>
+          </div>
+          <div className="dashboard-meta-card__row">
+            <p className="dashboard-meta-card__label">Dev Ops</p>
+            <p className="dashboard-meta-card__value">
+              Bundit Kasicheewin (Know)
+            </p>
+          </div>
+        </section>
+      }
     >
       <SummaryCards summary={summary} />
       <RegionMap
@@ -75,7 +104,7 @@ export default async function DashboardPage({
       <SectionCard
         aside={`${branchDirectory.length} branches`}
         eyebrow="Branch directory"
-        title="Open a branch"
+        title="Branch List"
       >
         <div className="grid max-h-[32rem] gap-3 overflow-y-auto pr-1 md:grid-cols-2 xl:grid-cols-3">
           {branchDirectory.map((branch) => (

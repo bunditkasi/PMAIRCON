@@ -8,6 +8,7 @@ interface AppShellProps {
   eyebrow: string;
   title: string;
   description?: string;
+  heroAside?: ReactNode;
   children: ReactNode;
 }
 
@@ -17,6 +18,7 @@ export function AppShell({
   eyebrow,
   title,
   description,
+  heroAside,
   children,
 }: AppShellProps) {
   return (
@@ -32,10 +34,15 @@ export function AppShell({
         ) : null}
 
         <header className="app-shell__hero">
-          <p className="app-shell__eyebrow">{eyebrow}</p>
-          <h1 className="app-shell__title">{title}</h1>
-          {description ? (
-            <p className="app-shell__description">{description}</p>
+          <div className="app-shell__hero-copy">
+            <p className="app-shell__eyebrow">{eyebrow}</p>
+            <h1 className="app-shell__title">{title}</h1>
+            {description ? (
+              <p className="app-shell__description">{description}</p>
+            ) : null}
+          </div>
+          {heroAside ? (
+            <div className="app-shell__hero-aside">{heroAside}</div>
           ) : null}
         </header>
 
