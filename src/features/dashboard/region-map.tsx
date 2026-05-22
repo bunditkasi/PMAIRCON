@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import type { RegionDashboardSummary } from "../../lib/services/dashboard-service";
 import { RegionLegend } from "./region-legend";
 
@@ -116,13 +117,13 @@ export function RegionMap({
               Select a region on the map to inspect current cycle completion.
             </p>
           </div>
-          <button
+          <Link
             className="rounded-full border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-muted)] transition hover:border-[var(--accent)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(44,91,73,0.18)]"
+            href="/dashboard"
             onClick={onReset}
-            type="button"
           >
             Reset region filter
-          </button>
+          </Link>
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
@@ -163,11 +164,11 @@ export function RegionMap({
                 );
 
                 return (
-                  <button
+                  <Link
                     key={region.id}
                     aria-label={`${region.summary.region} region, ${region.summary.currentCycleCompletionPercent}% current cycle completion, ${region.summary.annualCompletionPercent}% annual completion, ${region.summary.totalUnits} units`}
-                    aria-pressed={isActive}
                     className="absolute inset-0 overflow-hidden rounded-none border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(44,91,73,0.18)]"
+                    href={regionHref(region.summary.region, isActive)}
                     onClick={() => onRegionSelect?.(region.summary.region)}
                     style={{
                       backgroundColor: regionColor.backgroundColor,
@@ -176,7 +177,7 @@ export function RegionMap({
                         ? "inset 0 0 0 3px rgba(44,91,73,0.86)"
                         : "inset 0 0 0 1px rgba(74,89,85,0.32)",
                     }}
-                    type="button"
+                    aria-current={isActive ? "page" : undefined}
                   >
                     <span
                       aria-hidden="true"
@@ -189,7 +190,7 @@ export function RegionMap({
                     >
                       {region.label.toUpperCase()}
                     </span>
-                  </button>
+                  </Link>
                 );
               })}
             </div>
@@ -212,10 +213,10 @@ export function RegionMap({
                       key={region.region}
                       className="list-none"
                     >
-                      <button
+                      <Link
                         aria-label={`${region.region} current cycle ${region.currentCycleCompletionPercent}%`}
-                        aria-pressed={isActive}
                         className="w-full rounded-[1rem] border px-3 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(44,91,73,0.18)]"
+                        href={regionHref(region.region, isActive)}
                         onClick={() => onRegionSelect?.(region.region)}
                         style={{
                           backgroundColor: regionColor.backgroundColor,
@@ -224,7 +225,7 @@ export function RegionMap({
                             ? "inset 0 0 0 1px rgba(44,91,73,0.24)"
                             : undefined,
                         }}
-                        type="button"
+                        aria-current={isActive ? "page" : undefined}
                       >
                         <div className="flex items-center justify-between gap-3">
                           <span className="text-sm font-semibold text-[var(--text)]">
@@ -237,7 +238,7 @@ export function RegionMap({
                         <p className="mt-1 text-xs text-[var(--text-muted)]">
                           {region.totalUnits} units across {region.totalBranches} branches
                         </p>
-                      </button>
+                      </Link>
                     </li>
                   );
                 })}
@@ -270,6 +271,14 @@ export function RegionMap({
 
 function normalizeRegionId(value: string) {
   return value.toLowerCase().replace(/[^a-z]/g, "");
+}
+
+function regionHref(region: string, isActive: boolean) {
+  if (isActive) {
+    return "/dashboard";
+  }
+
+  return `/dashboard?region=${encodeURIComponent(region)}`;
 }
 
 function getRegionColor(percent: number) {

@@ -41,6 +41,12 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
 
   return (
     <section aria-label="Dashboard summary">
+      {summary.activeRegion ? (
+        <p className="mb-3 text-sm text-[var(--text-muted)]">
+          Scoped to {summary.activeRegion}
+        </p>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {cardItems.map((item) => (
           <MetricCard

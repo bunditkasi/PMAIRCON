@@ -16,7 +16,7 @@ describe("SummaryCards", () => {
           annualCompletionPercent: 76.5,
           currentCycleCompletionPercent: 48.25,
           activeCycleMonth: 2,
-          activeRegion: null,
+          activeRegion: "Central",
           regions: [],
         }}
       />,
@@ -36,5 +36,6 @@ describe("SummaryCards", () => {
     expect(
       screen.getByText("Cycle 2 progress across active units"),
     ).toBeInTheDocument();
+    expect(screen.getByText("Scoped to Central")).toBeInTheDocument();
   });
 });

@@ -1,19 +1,14 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 import { RegionMap } from "../../src/features/dashboard/region-map";
 
 describe("RegionMap", () => {
-  it("renders accessible mapped and supplemental region controls plus reset", () => {
-    const onRegionSelect = vi.fn();
-    const onReset = vi.fn();
-
+  it("renders accessible mapped and supplemental region links plus reset navigation", () => {
     render(
       <RegionMap
         activeRegion="Central"
-        onRegionSelect={onRegionSelect}
-        onReset={onReset}
         regions={[
           {
             region: "Central",
@@ -49,26 +44,19 @@ describe("RegionMap", () => {
       />,
     );
 
-    const activeRegionButton = screen.getByRole("button", { name: /central region/i });
-    const northRegionButton = screen.getByRole("button", { name: /north region/i });
-    const metroRegionButton = screen.getByRole("button", { name: /metro current cycle 80%/i });
+    const activeRegionLink = screen.getByRole("link", { name: /central region/i });
+    const northRegionLink = screen.getByRole("link", { name: /north region/i });
+    const metroRegionLink = screen.getByRole("link", { name: /metro current cycle 80%/i });
+    const resetLink = screen.getByRole("link", { name: /reset region filter/i });
 
     expect(
       screen.getByRole("img", { name: /thailand region heatmap/i }),
     ).toBeInTheDocument();
-    expect(activeRegionButton).toHaveAttribute("aria-pressed", "true");
-    expect(northRegionButton).toBeInTheDocument();
-    expect(metroRegionButton).toBeInTheDocument();
-
-    fireEvent.click(northRegionButton);
-    fireEvent.click(metroRegionButton);
-    fireEvent.click(
-      screen.getByRole("button", { name: /reset region filter/i }),
-    );
-
-    expect(onRegionSelect).toHaveBeenCalledWith("North");
-    expect(onRegionSelect).toHaveBeenCalledWith("Metro");
-    expect(onReset).toHaveBeenCalledTimes(1);
+    expect(activeRegionLink).toHaveAttribute("aria-current", "page");
+    expect(activeRegionLink).toHaveAttribute("href", "/dashboard");
+    expect(northRegionLink).toHaveAttribute("href", "/dashboard?region=North");
+    expect(metroRegionLink).toHaveAttribute("href", "/dashboard?region=Metro");
+    expect(resetLink).toHaveAttribute("href", "/dashboard");
   });
 
   it("uses the approved heatmap anchors and interpolates between them", () => {
@@ -110,13 +98,13 @@ describe("RegionMap", () => {
       />,
     );
 
-    const zeroPercentRegion = screen.getByRole("button", {
+    const zeroPercentRegion = screen.getByRole("link", {
       name: /south region/i,
     });
-    const interpolatedRegion = screen.getByRole("button", {
+    const interpolatedRegion = screen.getByRole("link", {
       name: /east region/i,
     });
-    const blueAnchorRegion = screen.getByRole("button", {
+    const blueAnchorRegion = screen.getByRole("link", {
       name: /west region/i,
     });
 

@@ -1,3 +1,4 @@
+import React from "react";
 import { RegionMap } from "../../features/dashboard/region-map";
 import { SummaryCards } from "../../features/dashboard/summary-cards";
 import { AppShell } from "../../features/ui/app-shell";
@@ -6,7 +7,17 @@ import { SectionCard } from "../../features/ui/section-card";
 import { loadAppDataCollections } from "../../lib/services/app-data";
 import { summarizeDashboard } from "../../lib/services/dashboard-service";
 
-export default async function DashboardPage() {
+interface DashboardPageProps {
+  searchParams?: Promise<{
+    region?: string;
+  }>;
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: DashboardPageProps) {
+  const params = searchParams ? await searchParams : undefined;
+  const activeRegion = params?.region?.trim() || null;
   const collections = await loadAppDataCollections();
   const todayParts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Bangkok",
@@ -20,9 +31,6 @@ export default async function DashboardPage() {
   const month = todayParts.find((part) => part.type === "month")?.value ?? "01";
   const day = todayParts.find((part) => part.type === "day")?.value ?? "01";
   const today = `${year.toString().padStart(4, "0")}-${month}-${day}`;
-  const branchDirectory = [...collections.branches].sort((left, right) =>
-    left.branchCode.localeCompare(right.branchCode),
-  );
   const summary = summarizeDashboard(
     {
       branches: collections.branches,
@@ -36,8 +44,12 @@ export default async function DashboardPage() {
     {
       today,
       year,
+      activeRegion,
     },
   );
+  const branchDirectory = collections.branches
+    .filter((branch) => !activeRegion || branch.region === activeRegion)
+    .sort((left, right) => left.branchCode.localeCompare(right.branchCode));
 
   return (
     <AppShell
@@ -49,9 +61,15 @@ export default async function DashboardPage() {
     >
       <SummaryCards summary={summary} />
       <RegionMap
-        activeRegion={null}
+        activeRegion={activeRegion}
         regions={summary.regions}
       />
+
+      {activeRegion ? (
+        <p className="text-sm text-[var(--text-muted)]">
+          Showing branches in {activeRegion}
+        </p>
+      ) : null}
 
       <SectionCard
         aside={`${branchDirectory.length} branches`}
