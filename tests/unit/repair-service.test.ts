@@ -13,6 +13,7 @@ describe("saveRepairLog", () => {
 
     const result = await saveRepairLog(
       {
+        findExistingRepairLog: async () => false,
         createRepairLog: async (payload) => {
           writes.push(payload);
           return undefined;
@@ -41,6 +42,36 @@ describe("saveRepairLog", () => {
       },
     ]);
     expect(result.latestIssueSummary).toBe("leak from indoor unit");
+    expect(result.status).toBe("saved");
+  });
+
+  it("returns duplicate without creating a second repair log", async () => {
+    const createRepairLog = vi.fn();
+    const updateUnitLatestIssueSummary = vi.fn();
+
+    const result = await saveRepairLog(
+      {
+        findExistingRepairLog: async () => true,
+        createRepairLog,
+        deleteRepairLog: async () => {},
+        updateUnitLatestIssueSummary,
+      },
+      {
+        branchCode: "BC01",
+        unitId: "BC01-CT-01",
+        serviceDate: "2026-05-18",
+        issueCategory: "WATER_LEAK",
+        issueDetail: "leak from indoor unit",
+        repairStatus: "DONE",
+      },
+    );
+
+    expect(result).toEqual({
+      latestIssueSummary: "leak from indoor unit",
+      status: "duplicate",
+    });
+    expect(createRepairLog).not.toHaveBeenCalled();
+    expect(updateUnitLatestIssueSummary).not.toHaveBeenCalled();
   });
 
   it("rejects invalid parsed input before any writes", async () => {
@@ -51,6 +82,7 @@ describe("saveRepairLog", () => {
     await expect(
       saveRepairLog(
         {
+          findExistingRepairLog: async () => false,
           createRepairLog,
           updateUnitLatestIssueSummary,
           deleteRepairLog,
@@ -79,6 +111,7 @@ describe("saveRepairLog", () => {
     await expect(
       saveRepairLog(
         {
+          findExistingRepairLog: async () => false,
           createRepairLog: vi.fn(async () => {
             throw createError;
           }),
@@ -116,6 +149,7 @@ describe("saveRepairLog", () => {
     await expect(
       saveRepairLog(
         {
+          findExistingRepairLog: async () => false,
           createRepairLog,
           updateUnitLatestIssueSummary: vi.fn(async () => {
             throw updateError;
@@ -144,6 +178,7 @@ describe("saveRepairLog", () => {
     await expect(
       saveRepairLog(
         {
+          findExistingRepairLog: async () => false,
           createRepairLog: vi.fn(async () => ({ rowIndex: 10 })),
           deleteRepairLog,
           updateUnitLatestIssueSummary: vi.fn(async () => {

@@ -7,6 +7,7 @@ export async function POST(request: Request) {
     const writer = createGoogleSheetLogWriter();
     const result = await savePmLog(
       {
+        findExistingPmLog: writer.findExistingPmLog,
         createPmLog: writer.appendPmLog,
         deletePmLog: writer.deletePmLog,
         updateUnitLatestPmDate: writer.updateUnitLatestPmDate,

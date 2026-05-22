@@ -9,6 +9,7 @@ export interface RepairLogRollbackToken {
 }
 
 export interface SaveRepairLogDeps {
+  findExistingRepairLog: (payload: RepairLogInput) => Promise<boolean>;
   createRepairLog: (
     payload: RepairLogInput,
   ) => Promise<RepairLogRollbackToken | undefined>;
@@ -28,6 +29,14 @@ export async function saveRepairLog(
   input: SaveRepairLogInput,
 ) {
   const payload = repairSchema.parse(input);
+
+  if (await deps.findExistingRepairLog(payload)) {
+    return {
+      latestIssueSummary: payload.issueDetail,
+      status: "duplicate" as const,
+    };
+  }
+
   const rollbackToken = await deps.createRepairLog(payload);
 
   try {
@@ -56,5 +65,6 @@ export async function saveRepairLog(
 
   return {
     latestIssueSummary: payload.issueDetail,
+    status: "saved" as const,
   };
 }

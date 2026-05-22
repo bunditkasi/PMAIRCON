@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type { SaveRepairLogInput } from "../../lib/services/repair-service";
 import {
@@ -18,9 +18,13 @@ interface RepairFormProps {
 }
 
 export function RepairForm({ initialValues }: RepairFormProps) {
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [submitState, setSubmitState] = useState<null | "saved" | "duplicate">(
+    null,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const submitGuardRef = useRef(false);
+  const isLocked = isSubmitting || submitState !== null;
 
   return (
     <SectionCard
@@ -36,9 +40,14 @@ export function RepairForm({ initialValues }: RepairFormProps) {
         className="mt-6 grid gap-4 md:grid-cols-2"
         onSubmit={async (event) => {
           event.preventDefault();
+          if (submitGuardRef.current) {
+            return;
+          }
+
+          submitGuardRef.current = true;
           setErrorMessage(null);
           setIsSubmitting(true);
-          setIsSuccess(false);
+          setSubmitState(null);
           try {
             const formData = new FormData(event.currentTarget);
             const response = await fetch("/api/repair", {
@@ -59,14 +68,20 @@ export function RepairForm({ initialValues }: RepairFormProps) {
             if (!response.ok) {
               const payload = (await response.json()) as { error?: string };
               setErrorMessage(payload.error ?? "Failed to save repair log");
+              submitGuardRef.current = false;
               setIsSubmitting(false);
               return;
             }
 
-            setIsSuccess(true);
+            const payload = (await response.json()) as {
+              status?: "saved" | "duplicate";
+            };
+
+            setSubmitState(payload.status === "duplicate" ? "duplicate" : "saved");
             setIsSubmitting(false);
           } catch {
             setErrorMessage("Failed to save repair log");
+            submitGuardRef.current = false;
             setIsSubmitting(false);
           }
         }}
@@ -86,6 +101,7 @@ export function RepairForm({ initialValues }: RepairFormProps) {
         <FieldWrapper label="Service date">
           <TextInput
             defaultValue={initialValues.serviceDate}
+            disabled={isLocked}
             name="serviceDate"
             required
             type="date"
@@ -95,6 +111,7 @@ export function RepairForm({ initialValues }: RepairFormProps) {
         <FieldWrapper label="Issue category">
           <SelectInput
             defaultValue={initialValues.issueCategory}
+            disabled={isLocked}
             name="issueCategory"
             required
           >
@@ -111,6 +128,7 @@ export function RepairForm({ initialValues }: RepairFormProps) {
         >
           <TextAreaInput
             defaultValue={initialValues.issueDetail}
+            disabled={isLocked}
             name="issueDetail"
             placeholder="Describe the issue found"
             required
@@ -120,6 +138,7 @@ export function RepairForm({ initialValues }: RepairFormProps) {
         <FieldWrapper label="Repair status">
           <SelectInput
             defaultValue={initialValues.repairStatus}
+            disabled={isLocked}
             name="repairStatus"
             required
           >
@@ -131,21 +150,27 @@ export function RepairForm({ initialValues }: RepairFormProps) {
 
         <div className="md:col-span-2 flex justify-end">
           <button
-            disabled={isSubmitting}
+            disabled={isLocked}
             className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white"
             type="submit"
           >
-            {isSubmitting ? "Saving..." : "Save repair"}
+            {isSubmitting ? "Saving..." : submitState ? "Saved" : "Save repair"}
           </button>
         </div>
 
-        {isSuccess ? (
-          <p
-            aria-live="polite"
-            className="md:col-span-2 text-sm font-medium text-emerald-700"
-          >
-            Repair saved
-          </p>
+        {submitState ? (
+          <div className="md:col-span-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800">
+            <p aria-live="polite" className="font-semibold">
+              {submitState === "duplicate"
+                ? "This repair record was already saved"
+                : "Saved to Google Sheet"}
+            </p>
+            <p className="mt-1 text-emerald-700">
+              {submitState === "duplicate"
+                ? "No duplicate row was created."
+                : "This repair record was stored successfully."}
+            </p>
+          </div>
         ) : null}
 
         {errorMessage ? (
@@ -155,6 +180,17 @@ export function RepairForm({ initialValues }: RepairFormProps) {
           >
             {errorMessage}
           </p>
+        ) : null}
+
+        {submitState ? (
+          <div className="md:col-span-2 flex justify-end">
+            <a
+              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              href={`/units/${initialValues.unitId}`}
+            >
+              Back to unit
+            </a>
+          </div>
         ) : null}
       </form>
     </SectionCard>

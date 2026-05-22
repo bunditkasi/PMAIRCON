@@ -73,6 +73,29 @@ export function createGoogleSheetLogWriter({
   }
 
   return {
+    async findExistingPmLog(input: SavePmLogInput) {
+      const rows = await fetchSheetValues(
+        fetchImpl,
+        accessTokenProvider,
+        resolvedSheetId,
+        "PM_Logs!A:R",
+      );
+
+      return rows.slice(1).some((row) => {
+        const unitId = normalizeSheetValue(row[2]);
+        const serviceDate = normalizeSheetValue(row[6]);
+        const serviceStatus = normalizeSheetValue(row[7]);
+        const technicianName = normalizeSheetValue(row[8], true);
+
+        return (
+          unitId === normalizeSheetValue(input.unitId) &&
+          serviceDate === normalizeSheetValue(input.serviceDate) &&
+          serviceStatus === normalizeSheetValue(input.serviceStatus) &&
+          technicianName === normalizeSheetValue(input.technicianName, true)
+        );
+      });
+    },
+
     async appendPmLog(input: SavePmLogInput): Promise<PmLogRollbackToken> {
       const timestamp = now().toISOString();
       const pmLogId = `PM-${timestamp}-${randomId()}`;
@@ -130,6 +153,29 @@ export function createGoogleSheetLogWriter({
         { range: `Units!O${rowIndex}`, values: [[serviceDate]] },
         { range: `Units!U${rowIndex}`, values: [[now().toISOString()]] },
       ]);
+    },
+
+    async findExistingRepairLog(input: SaveRepairLogInput) {
+      const rows = await fetchSheetValues(
+        fetchImpl,
+        accessTokenProvider,
+        resolvedSheetId,
+        "Repair_Logs!A:R",
+      );
+
+      return rows.slice(1).some((row) => {
+        const unitId = normalizeSheetValue(row[2]);
+        const serviceDate = normalizeSheetValue(row[4]);
+        const issueDetail = normalizeSheetValue(row[6], true);
+        const repairStatus = normalizeSheetValue(row[8]);
+
+        return (
+          unitId === normalizeSheetValue(input.unitId) &&
+          serviceDate === normalizeSheetValue(input.serviceDate) &&
+          issueDetail === normalizeSheetValue(input.issueDetail, true) &&
+          repairStatus === normalizeSheetValue(input.repairStatus)
+        );
+      });
     },
 
     async appendRepairLog(input: SaveRepairLogInput): Promise<RepairLogRollbackToken> {
@@ -412,6 +458,31 @@ async function findUnitRowIndex(
   return index + 1;
 }
 
+async function fetchSheetValues(
+  fetchImpl: typeof fetch,
+  getAccessToken: () => Promise<string>,
+  spreadsheetId: string,
+  range: string,
+) {
+  const accessToken = await getAccessToken();
+  const response = await fetchImpl(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?valueRenderOption=FORMATTED_VALUE`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to read sheet values: ${response.status}`);
+  }
+
+  const payload = (await response.json()) as { values?: string[][] };
+
+  return payload.values ?? [];
+}
+
 async function batchUpdateValues(
   fetchImpl: typeof fetch,
   getAccessToken: () => Promise<string>,
@@ -586,4 +657,10 @@ function signJwt(
 
 function encodeBase64Url(value: string): string {
   return Buffer.from(value).toString("base64url");
+}
+
+function normalizeSheetValue(value: string | undefined, lowercase = false) {
+  const normalized = String(value ?? "").trim();
+
+  return lowercase ? normalized.toLowerCase() : normalized;
 }

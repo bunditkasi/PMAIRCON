@@ -7,6 +7,7 @@ export async function POST(request: Request) {
     const writer = createGoogleSheetLogWriter();
     const result = await saveRepairLog(
       {
+        findExistingRepairLog: writer.findExistingRepairLog,
         createRepairLog: writer.appendRepairLog,
         deleteRepairLog: writer.deleteRepairLog,
         updateUnitLatestIssueSummary: (

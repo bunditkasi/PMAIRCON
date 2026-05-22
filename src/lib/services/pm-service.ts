@@ -6,6 +6,7 @@ export interface PmLogRollbackToken {
 }
 
 export interface SavePmLogDeps {
+  findExistingPmLog: (payload: PmLogInput) => Promise<boolean>;
   createPmLog: (
     payload: PmLogInput,
   ) => Promise<PmLogRollbackToken | undefined>;
@@ -21,6 +22,14 @@ export async function savePmLog(
   input: SavePmLogInput,
 ) {
   const payload = pmSchema.parse(input);
+
+  if (await deps.findExistingPmLog(payload)) {
+    return {
+      latestPmDate: payload.serviceDate,
+      status: "duplicate" as const,
+    };
+  }
+
   const rollbackToken = await deps.createPmLog(payload);
 
   try {
@@ -42,5 +51,6 @@ export async function savePmLog(
 
   return {
     latestPmDate: payload.serviceDate,
+    status: "saved" as const,
   };
 }

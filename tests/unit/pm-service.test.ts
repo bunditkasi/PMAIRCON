@@ -8,6 +8,7 @@ describe("savePmLog", () => {
 
     const result = await savePmLog(
       {
+        findExistingPmLog: async () => false,
         createPmLog: async (payload) => {
           writes.push(payload);
           return undefined;
@@ -27,6 +28,36 @@ describe("savePmLog", () => {
 
     expect(writes).toHaveLength(1);
     expect(result.latestPmDate).toBe("2026-05-18");
+    expect(result.status).toBe("saved");
+  });
+
+  it("returns duplicate without creating a second PM log", async () => {
+    const createPmLog = vi.fn();
+    const updateUnitLatestPmDate = vi.fn();
+
+    const result = await savePmLog(
+      {
+        findExistingPmLog: async () => true,
+        createPmLog,
+        deletePmLog: async () => {},
+        updateUnitLatestPmDate,
+      },
+      {
+        branchCode: "BC01",
+        unitId: "BC01-CT-01",
+        serviceDate: "2026-05-18",
+        technicianName: "Somchai",
+        supplierName: "Klangsub Engineer",
+        serviceStatus: "DONE",
+      },
+    );
+
+    expect(result).toEqual({
+      latestPmDate: "2026-05-18",
+      status: "duplicate",
+    });
+    expect(createPmLog).not.toHaveBeenCalled();
+    expect(updateUnitLatestPmDate).not.toHaveBeenCalled();
   });
 
   it("rejects invalid parsed input before any writes", async () => {
@@ -37,6 +68,7 @@ describe("savePmLog", () => {
     await expect(
       savePmLog(
         {
+          findExistingPmLog: async () => false,
           createPmLog,
           updateUnitLatestPmDate,
           deletePmLog,
@@ -65,6 +97,7 @@ describe("savePmLog", () => {
     await expect(
       savePmLog(
         {
+          findExistingPmLog: async () => false,
           createPmLog: vi.fn(async () => {
             throw createError;
           }),
@@ -102,6 +135,7 @@ describe("savePmLog", () => {
     await expect(
       savePmLog(
         {
+          findExistingPmLog: async () => false,
           createPmLog,
           updateUnitLatestPmDate: vi.fn(async () => {
             throw updateError;
@@ -130,6 +164,7 @@ describe("savePmLog", () => {
     await expect(
       savePmLog(
         {
+          findExistingPmLog: async () => false,
           createPmLog: vi.fn(async () => ({ rowIndex: 8 })),
           deletePmLog,
           updateUnitLatestPmDate: vi.fn(async () => {

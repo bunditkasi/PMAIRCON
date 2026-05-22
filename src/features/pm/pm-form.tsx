@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type { SavePmLogInput } from "../../lib/services/pm-service";
 import {
@@ -16,9 +16,13 @@ interface PmFormProps {
 }
 
 export function PmForm({ initialValues }: PmFormProps) {
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [submitState, setSubmitState] = useState<null | "saved" | "duplicate">(
+    null,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const submitGuardRef = useRef(false);
+  const isLocked = isSubmitting || submitState !== null;
 
   return (
     <SectionCard
@@ -34,9 +38,14 @@ export function PmForm({ initialValues }: PmFormProps) {
         className="mt-6 grid gap-4 md:grid-cols-2"
         onSubmit={async (event) => {
           event.preventDefault();
+          if (submitGuardRef.current) {
+            return;
+          }
+
+          submitGuardRef.current = true;
           setErrorMessage(null);
           setIsSubmitting(true);
-          setIsSuccess(false);
+          setSubmitState(null);
           try {
             const formData = new FormData(event.currentTarget);
             const response = await fetch("/api/pm", {
@@ -57,14 +66,20 @@ export function PmForm({ initialValues }: PmFormProps) {
             if (!response.ok) {
               const payload = (await response.json()) as { error?: string };
               setErrorMessage(payload.error ?? "Failed to save PM log");
+              submitGuardRef.current = false;
               setIsSubmitting(false);
               return;
             }
 
-            setIsSuccess(true);
+            const payload = (await response.json()) as {
+              status?: "saved" | "duplicate";
+            };
+
+            setSubmitState(payload.status === "duplicate" ? "duplicate" : "saved");
             setIsSubmitting(false);
           } catch {
             setErrorMessage("Failed to save PM log");
+            submitGuardRef.current = false;
             setIsSubmitting(false);
           }
         }}
@@ -84,6 +99,7 @@ export function PmForm({ initialValues }: PmFormProps) {
         <FieldWrapper label="Service date">
           <TextInput
             defaultValue={initialValues.serviceDate}
+            disabled={isLocked}
             name="serviceDate"
             required
             type="date"
@@ -93,6 +109,7 @@ export function PmForm({ initialValues }: PmFormProps) {
         <FieldWrapper label="Technician name">
           <TextInput
             defaultValue={initialValues.technicianName}
+            disabled={isLocked}
             name="technicianName"
             placeholder="Enter technician name"
             required
@@ -102,6 +119,7 @@ export function PmForm({ initialValues }: PmFormProps) {
         <FieldWrapper label="Supplier name">
           <TextInput
             defaultValue={initialValues.supplierName}
+            disabled={isLocked}
             name="supplierName"
             required
           />
@@ -115,21 +133,27 @@ export function PmForm({ initialValues }: PmFormProps) {
 
         <div className="md:col-span-2 flex justify-end">
           <button
-            disabled={isSubmitting}
+            disabled={isLocked}
             className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white"
             type="submit"
           >
-            {isSubmitting ? "Saving..." : "Save PM"}
+            {isSubmitting ? "Saving..." : submitState ? "Saved" : "Save PM"}
           </button>
         </div>
 
-        {isSuccess ? (
-          <p
-            aria-live="polite"
-            className="md:col-span-2 text-sm font-medium text-emerald-700"
-          >
-            PM saved
-          </p>
+        {submitState ? (
+          <div className="md:col-span-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800">
+            <p aria-live="polite" className="font-semibold">
+              {submitState === "duplicate"
+                ? "This PM record was already saved"
+                : "Saved to Google Sheet"}
+            </p>
+            <p className="mt-1 text-emerald-700">
+              {submitState === "duplicate"
+                ? "No duplicate row was created."
+                : "This PM record was stored successfully."}
+            </p>
+          </div>
         ) : null}
 
         {errorMessage ? (
@@ -139,6 +163,17 @@ export function PmForm({ initialValues }: PmFormProps) {
           >
             {errorMessage}
           </p>
+        ) : null}
+
+        {submitState ? (
+          <div className="md:col-span-2 flex justify-end">
+            <a
+              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              href={`/units/${initialValues.unitId}`}
+            >
+              Back to unit
+            </a>
+          </div>
         ) : null}
       </form>
     </SectionCard>

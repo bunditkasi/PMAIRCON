@@ -3,9 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const appendRepairLog = vi.fn();
 const deleteRepairLog = vi.fn();
 const updateUnitLatestRepair = vi.fn();
+const findExistingRepairLog = vi.fn();
 
 vi.mock("../../src/lib/google/sheet-log-writer", () => ({
   createGoogleSheetLogWriter: () => ({
+    findExistingRepairLog,
     appendRepairLog,
     deleteRepairLog,
     updateUnitLatestRepair,
@@ -15,6 +17,7 @@ vi.mock("../../src/lib/google/sheet-log-writer", () => ({
 describe("POST /api/repair", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    findExistingRepairLog.mockResolvedValue(false);
     appendRepairLog.mockResolvedValue({ rowIndex: 2 });
     deleteRepairLog.mockResolvedValue(undefined);
     updateUnitLatestRepair.mockResolvedValue(undefined);
@@ -44,11 +47,44 @@ describe("POST /api/repair", () => {
 
     expect(response.status).toBe(200);
     expect(payload.latestIssueSummary).toBe("Leak from ceiling cassette");
+    expect(payload.status).toBe("saved");
     expect(appendRepairLog).toHaveBeenCalledTimes(1);
     expect(updateUnitLatestRepair).toHaveBeenCalledWith(
       "BC01-CS-01",
       "2026-05-21",
       "Leak from ceiling cassette",
     );
+  });
+
+  it("returns duplicate-safe success without appending when a repair log already exists", async () => {
+    findExistingRepairLog.mockResolvedValue(true);
+    const { POST } = await import("../../src/app/api/repair/route");
+
+    const response = await POST(
+      new Request("http://localhost/api/repair", {
+        method: "POST",
+        body: JSON.stringify({
+          branchCode: "BC01",
+          unitId: "BC01-CS-01",
+          serviceDate: "2026-05-21",
+          issueCategory: "WATER_LEAK",
+          issueDetail: "Leak from ceiling cassette",
+          repairStatus: "DONE",
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
+
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload).toEqual({
+      latestIssueSummary: "Leak from ceiling cassette",
+      status: "duplicate",
+    });
+    expect(appendRepairLog).not.toHaveBeenCalled();
+    expect(updateUnitLatestRepair).not.toHaveBeenCalled();
   });
 });
