@@ -50,6 +50,7 @@ export default async function DashboardPage({
   const branchDirectory = collections.branches
     .filter((branch) => !activeRegion || branch.region === activeRegion)
     .sort((left, right) => left.branchCode.localeCompare(right.branchCode));
+  const unitTypeCountsByBranch = summarizeUnitTypesByBranch(collections.units);
 
   return (
     <AppShell
@@ -80,6 +81,7 @@ export default async function DashboardPage({
           {branchDirectory.map((branch) => (
             <RecordLinkRow
               key={branch.branchCode}
+              details={unitTypeCountsByBranch.get(branch.branchCode) ?? []}
               href={`/branches/${branch.branchCode}`}
               meta={`Supplier: ${branch.supplierName || "Not assigned"}`}
               subtitle={branch.outletName}
@@ -107,4 +109,48 @@ function resolveActiveRegion(
   );
 
   return matchedBranch?.region ?? null;
+}
+
+function summarizeUnitTypesByBranch(
+  units: Array<{ unitId: string; branchCode: string }>,
+) {
+  const countsByBranch = new Map<string, Map<string, number>>();
+
+  for (const unit of units) {
+    const unitType = extractUnitType(unit.unitId, unit.branchCode);
+
+    if (!unitType) {
+      continue;
+    }
+
+    const branchCounts = countsByBranch.get(unit.branchCode) ?? new Map<string, number>();
+    branchCounts.set(unitType, (branchCounts.get(unitType) ?? 0) + 1);
+    countsByBranch.set(unit.branchCode, branchCounts);
+  }
+
+  return new Map(
+    [...countsByBranch.entries()].map(([branchCode, branchCounts]) => [
+      branchCode,
+      [...branchCounts.entries()]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([label, value]) => ({ label, value })),
+    ]),
+  );
+}
+
+function extractUnitType(unitId: string, branchCode: string) {
+  const prefix = `${branchCode}-`;
+
+  if (!unitId.startsWith(prefix)) {
+    return null;
+  }
+
+  const segments = unitId.slice(prefix.length).split("-");
+  const unitType = segments[0]?.trim().toUpperCase();
+
+  if (!unitType || !/^[A-Z]{2,4}$/.test(unitType)) {
+    return null;
+  }
+
+  return unitType;
 }

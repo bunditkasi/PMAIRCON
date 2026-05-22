@@ -23,12 +23,14 @@ vi.mock("../../src/lib/services/app-data", () => ({
       },
     ],
     units: [
-      { unitId: "BKK-01-01", branchCode: "BKK-01" },
-      { unitId: "CNX-01-01", branchCode: "CNX-01" },
+      { unitId: "BKK-01-CUR-01", branchCode: "BKK-01" },
+      { unitId: "BKK-01-CT-01", branchCode: "BKK-01" },
+      { unitId: "BKK-01-CT-02", branchCode: "BKK-01" },
+      { unitId: "CNX-01-CS-01", branchCode: "CNX-01" },
     ],
     pmLogs: [
       {
-        unitId: "BKK-01-01",
+        unitId: "BKK-01-CUR-01",
         serviceDate: "2026-05-10",
         serviceStatus: "DONE",
       },
@@ -49,6 +51,8 @@ describe("DashboardPage", () => {
       screen.getByText("Showing branches in Central"),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "BKK-01" })).toBeInTheDocument();
+    expect(screen.getByText("CT = 2")).toBeInTheDocument();
+    expect(screen.getByText("CUR = 1")).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: "CNX-01" }),
     ).not.toBeInTheDocument();
@@ -82,5 +86,6 @@ describe("DashboardPage", () => {
     ).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "BKK-01" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "CNX-01" })).toBeInTheDocument();
+    expect(screen.getByText("CS = 1")).toBeInTheDocument();
   });
 });
