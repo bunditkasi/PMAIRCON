@@ -16,10 +16,10 @@ const QR_LABEL_HEIGHT = 520;
 const QR_FONT_FILE = path.join(
   process.cwd(),
   "node_modules",
-  "@fontsource-variable",
-  "inter",
-  "files",
-  "inter-latin-wght-normal.woff2",
+  "open-sans-fonts",
+  "open-sans",
+  "Regular",
+  "OpenSans-Regular.ttf",
 );
 
 export interface BranchQrExportRow {
@@ -489,7 +489,7 @@ async function renderQrLabelPng(row: QrRenderableRow): Promise<Buffer> {
       value: QR_LABEL_WIDTH,
     },
     font: {
-      defaultFontFamily: "Inter",
+      defaultFontFamily: "Open Sans",
       fontFiles: [QR_FONT_FILE],
       loadSystemFonts: false,
     },
@@ -534,13 +534,13 @@ function createQrLabelSvg(input: {
   return `
     <svg xmlns="http://www.w3.org/2000/svg" width="${QR_LABEL_WIDTH}" height="${QR_LABEL_HEIGHT}" viewBox="0 0 ${QR_LABEL_WIDTH} ${QR_LABEL_HEIGHT}">
       <rect x="8" y="8" width="${QR_LABEL_WIDTH - 16}" height="${QR_LABEL_HEIGHT - 16}" rx="28" fill="#FCFDFC" stroke="#C9D7D0" stroke-width="2"/>
-      <text x="32" y="48" font-size="12" font-family="Inter" fill="#46625B" font-weight="700" letter-spacing="2">${badge}</text>
-      <text x="32" y="84" font-size="34" font-family="Inter" fill="#0F2B25" font-weight="700">${title}</text>
-      <text x="32" y="116" font-size="18" font-family="Inter" fill="#46625B">${subtitle}</text>
+      <text x="32" y="48" font-size="12" font-family="Open Sans" fill="#46625B" font-weight="700" letter-spacing="2">${badge}</text>
+      <text x="32" y="84" font-size="34" font-family="Open Sans" fill="#0F2B25" font-weight="700">${title}</text>
+      <text x="32" y="116" font-size="18" font-family="Open Sans" fill="#46625B">${subtitle}</text>
       <rect x="70" y="144" width="280" height="280" rx="20" fill="#FFFFFF" stroke="#D9E5E0" stroke-width="2"/>
       <image x="86" y="160" width="248" height="248" href="${input.qrDataUrl}" />
-      <text x="32" y="458" font-size="14" font-family="Inter" fill="#46625B" font-weight="700">Scan to open record</text>
-      <text x="32" y="486" font-size="11" font-family="Inter" fill="#6C857D">${targetUrl}</text>
+      <text x="32" y="458" font-size="14" font-family="Open Sans" fill="#46625B" font-weight="700">Scan to open record</text>
+      <text x="32" y="486" font-size="11" font-family="Open Sans" fill="#6C857D">${targetUrl}</text>
     </svg>
   `.trim();
 }
