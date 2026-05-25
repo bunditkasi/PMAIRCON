@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import path from "node:path";
 
 import {
-  QR_CONSOLE_EXPORT_ROOT,
   runQrConsoleExport,
   type QrConsoleMode,
 } from "../../../lib/qr/export-console";
@@ -44,12 +42,54 @@ export async function POST(request: Request) {
       skippedUnitCount: result.skippedUnitCount,
       outputRoot: result.outputRoot,
       downloads: {
-        branchPdf: toDownloadPath(result.assetSummary.branches?.pdfPath),
-        branchZip: toDownloadPath(result.assetSummary.branches?.zipPath),
-        branchManifest: toDownloadPath(result.assetSummary.branches?.manifestPath),
-        unitPdf: toDownloadPath(result.assetSummary.units?.pdfPath),
-        unitZip: toDownloadPath(result.assetSummary.units?.zipPath),
-        unitManifest: toDownloadPath(result.assetSummary.units?.manifestPath),
+        branchPdf:
+          result.assetSummary.branches?.pdfPath
+            ? buildDownloadPath({
+                asset: "branchPdf",
+                region: payload.region?.trim() || "",
+                branchCodes,
+              })
+            : null,
+        branchZip:
+          result.assetSummary.branches?.zipPath
+            ? buildDownloadPath({
+                asset: "branchZip",
+                region: payload.region?.trim() || "",
+                branchCodes,
+              })
+            : null,
+        branchManifest:
+          result.assetSummary.branches?.manifestPath
+            ? buildDownloadPath({
+                asset: "branchManifest",
+                region: payload.region?.trim() || "",
+                branchCodes,
+              })
+            : null,
+        unitPdf:
+          result.assetSummary.units?.pdfPath
+            ? buildDownloadPath({
+                asset: "unitPdf",
+                region: payload.region?.trim() || "",
+                branchCodes,
+              })
+            : null,
+        unitZip:
+          result.assetSummary.units?.zipPath
+            ? buildDownloadPath({
+                asset: "unitZip",
+                region: payload.region?.trim() || "",
+                branchCodes,
+              })
+            : null,
+        unitManifest:
+          result.assetSummary.units?.manifestPath
+            ? buildDownloadPath({
+                asset: "unitManifest",
+                region: payload.region?.trim() || "",
+                branchCodes,
+              })
+            : null,
       },
     });
   } catch (error) {
@@ -63,15 +103,28 @@ export async function POST(request: Request) {
   }
 }
 
-function toDownloadPath(filePath: string | null | undefined) {
-  if (!filePath) {
-    return null;
+function buildDownloadPath(input: {
+  asset:
+    | "branchPdf"
+    | "branchZip"
+    | "branchManifest"
+    | "unitPdf"
+    | "unitZip"
+    | "unitManifest";
+  region: string;
+  branchCodes: string[];
+}) {
+  const params = new URLSearchParams({
+    asset: input.asset,
+  });
+
+  if (input.region) {
+    params.set("region", input.region);
   }
 
-  const relativePath = path
-    .relative(QR_CONSOLE_EXPORT_ROOT, filePath)
-    .split(path.sep)
-    .join("/");
+  if (input.branchCodes.length > 0) {
+    params.set("branchCodes", input.branchCodes.join(","));
+  }
 
-  return `/api/qr-console/download?file=${encodeURIComponent(relativePath)}`;
+  return `/api/qr-console/download?${params.toString()}`;
 }

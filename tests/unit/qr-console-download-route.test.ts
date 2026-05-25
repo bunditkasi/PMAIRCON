@@ -1,36 +1,57 @@
-import { mkdir, rm, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { afterEach, describe, expect, it } from "vitest";
+const runQrConsoleExport = vi.fn();
 
-import { QR_CONSOLE_EXPORT_ROOT } from "../../src/lib/qr/export-console";
-import { GET } from "../../src/app/api/qr-console/download/route";
+vi.mock("../../src/lib/qr/export-console", () => ({
+  runQrConsoleExport,
+}));
 
 describe("GET /api/qr-console/download", () => {
-  afterEach(async () => {
-    await rm(QR_CONSOLE_EXPORT_ROOT, { recursive: true, force: true });
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it("serves a generated file from the export root", async () => {
-    const filePath = path.join(QR_CONSOLE_EXPORT_ROOT, "sample", "test.json");
+  it("generates and serves a branch manifest asset", async () => {
+    runQrConsoleExport.mockResolvedValue({
+      branchCount: 2,
+      unitCount: 0,
+      skippedBranchCount: 0,
+      skippedUnitCount: 0,
+      outputRoot: "/tmp/qr-console-downloads/test",
+      assetSummary: {
+        branches: {
+          pngCount: 2,
+          pdfPath: null,
+          pngDirectory: "/tmp/qr-console-downloads/test/branches",
+          zipPath: null,
+          manifestPath: "tests/fixtures/qr-console/sample.manifest.json",
+        },
+        units: null,
+      },
+    });
 
-    await mkdir(path.dirname(filePath), { recursive: true });
-    await writeFile(filePath, '{"ok":true}', "utf8");
-
+    const { GET } = await import("../../src/app/api/qr-console/download/route");
     const response = await GET(
       new Request(
-        "http://localhost/api/qr-console/download?file=sample%2Ftest.json",
+        "http://localhost/api/qr-console/download?asset=branchManifest&region=East&branchCodes=BE01,BE03",
       ),
     );
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("application/json");
+    expect(runQrConsoleExport).toHaveBeenCalledWith({
+      region: "East",
+      branchCodes: ["BE01", "BE03"],
+      mode: "branches",
+      zipOutputs: true,
+    });
   });
 
-  it("rejects path traversal attempts", async () => {
+  it("rejects invalid asset types", async () => {
+    const { GET } = await import("../../src/app/api/qr-console/download/route");
     const response = await GET(
       new Request(
-        "http://localhost/api/qr-console/download?file=..%2F..%2Fsecret.txt",
+        "http://localhost/api/qr-console/download?asset=../../secret.txt",
       ),
     );
 

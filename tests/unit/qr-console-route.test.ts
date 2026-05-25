@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const runQrConsoleExport = vi.fn();
 
 vi.mock("../../src/lib/qr/export-console", () => ({
-  QR_CONSOLE_EXPORT_ROOT: "C:/tmp/qr-console-downloads",
   runQrConsoleExport,
 }));
 
@@ -57,8 +56,8 @@ describe("POST /api/qr-console", () => {
       zipOutputs: true,
       mode: "branches",
     });
-    expect(payload.downloads.branchPdf).toContain("/api/qr-console/download?file=");
-    expect(payload.downloads.branchZip).toContain("/api/qr-console/download?file=");
+    expect(payload.downloads.branchPdf).toContain("/api/qr-console/download?asset=branchPdf");
+    expect(payload.downloads.branchZip).toContain("/api/qr-console/download?asset=branchZip");
   });
 
   it("rejects invalid export modes", async () => {

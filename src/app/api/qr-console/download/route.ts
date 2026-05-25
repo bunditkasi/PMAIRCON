@@ -1,55 +1,106 @@
-import { access, readFile } from "node:fs/promises";
-import path from "node:path";
+import { readFile } from "node:fs/promises";
 
 import { NextResponse } from "next/server";
 
-import { QR_CONSOLE_EXPORT_ROOT } from "../../../../lib/qr/export-console";
+import {
+  runQrConsoleExport,
+  type QrConsoleMode,
+} from "../../../../lib/qr/export-console";
+
+type DownloadAsset =
+  | "branchPdf"
+  | "branchZip"
+  | "branchManifest"
+  | "unitPdf"
+  | "unitZip"
+  | "unitManifest";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const relativeFile = searchParams.get("file")?.trim();
+  const asset = searchParams.get("asset")?.trim() as DownloadAsset | null;
 
-  if (!relativeFile) {
-    return NextResponse.json({ error: "Missing file path" }, { status: 400 });
+  if (!asset || !isDownloadAsset(asset)) {
+    return NextResponse.json({ error: "Invalid asset" }, { status: 400 });
   }
 
-  const resolvedPath = path.resolve(QR_CONSOLE_EXPORT_ROOT, relativeFile);
-  const exportRoot = path.resolve(QR_CONSOLE_EXPORT_ROOT);
+  const branchCodes = String(searchParams.get("branchCodes") ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
 
-  if (!resolvedPath.startsWith(exportRoot)) {
-    return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
-  }
+  const mode = asset.startsWith("branch") ? "branches" : "units";
+  const zipOutputs = asset.endsWith("Zip") || asset.endsWith("Manifest");
 
-  try {
-    await access(resolvedPath);
-  } catch {
+  const result = await runQrConsoleExport({
+    region: searchParams.get("region")?.trim() || "",
+    branchCodes,
+    mode,
+    zipOutputs,
+  });
+
+  const filePath = resolveAssetPath(result, asset);
+
+  if (!filePath) {
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
 
-  const content = await readFile(resolvedPath);
-  const fileName = path.basename(resolvedPath);
+  const content = await readFile(filePath);
 
   return new NextResponse(new Uint8Array(content), {
     headers: {
-      "Content-Type": getContentType(resolvedPath),
-      "Content-Disposition": `attachment; filename="${fileName}"`,
+      "Content-Type": getContentType(asset),
+      "Content-Disposition": `attachment; filename="${getFileName(filePath)}"`,
     },
   });
 }
 
-function getContentType(filePath: string) {
-  const extension = path.extname(filePath).toLowerCase();
+function isDownloadAsset(value: string): value is DownloadAsset {
+  return [
+    "branchPdf",
+    "branchZip",
+    "branchManifest",
+    "unitPdf",
+    "unitZip",
+    "unitManifest",
+  ].includes(value);
+}
 
-  switch (extension) {
-    case ".pdf":
-      return "application/pdf";
-    case ".zip":
-      return "application/zip";
-    case ".json":
-      return "application/json";
-    case ".png":
-      return "image/png";
+function resolveAssetPath(
+  result: Awaited<ReturnType<typeof runQrConsoleExport>>,
+  asset: DownloadAsset,
+) {
+  switch (asset) {
+    case "branchPdf":
+      return result.assetSummary.branches?.pdfPath ?? null;
+    case "branchZip":
+      return result.assetSummary.branches?.zipPath ?? null;
+    case "branchManifest":
+      return result.assetSummary.branches?.manifestPath ?? null;
+    case "unitPdf":
+      return result.assetSummary.units?.pdfPath ?? null;
+    case "unitZip":
+      return result.assetSummary.units?.zipPath ?? null;
+    case "unitManifest":
+      return result.assetSummary.units?.manifestPath ?? null;
     default:
-      return "application/octet-stream";
+      return null;
   }
+}
+
+function getContentType(asset: DownloadAsset) {
+  if (asset.endsWith("Pdf")) {
+    return "application/pdf";
+  }
+
+  if (asset.endsWith("Zip")) {
+    return "application/zip";
+  }
+
+  return "application/json";
+}
+
+function getFileName(filePath: string) {
+  const segments = filePath.replaceAll("\\", "/").split("/");
+
+  return segments[segments.length - 1] || "download";
 }
