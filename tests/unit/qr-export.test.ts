@@ -52,7 +52,7 @@ describe("qr export helpers", () => {
       expect.objectContaining({
         unitId: "BC01-CS-01",
         unitType: "CS",
-        subtitle: "CS • BC01",
+        subtitle: "CS | BC01",
         targetUrl: "https://example.com/units/BC01-CS-01",
       }),
     ]);
@@ -117,6 +117,6 @@ describe("qr export helpers", () => {
 
   it("formats fallback subtitles safely", () => {
     expect(formatBranchQrSubtitle("")).toBe("UNKNOWN OUTLET");
-    expect(formatUnitQrSubtitle("", "BC01")).toBe("UNIT • BC01");
+    expect(formatUnitQrSubtitle("", "BC01")).toBe("UNIT | BC01");
   });
 });

@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument } from "pdf-lib";
 import QRCode from "qrcode";
 import { Resvg } from "@resvg/resvg-js";
 
@@ -63,6 +63,11 @@ export interface QrRenderableRow {
   subtitle: string;
   badge: string;
   targetUrl: string;
+}
+
+interface RenderedQrLabel {
+  row: QrRenderableRow;
+  pngBuffer: Buffer;
 }
 
 export function buildQrExportRows(
@@ -178,15 +183,22 @@ export async function writeQrPdfSheet(
   rows: QrRenderableRow[],
   pdfPath: string,
 ): Promise<string | null> {
-  if (rows.length === 0) {
+  const renderedLabels = await renderQrLabelsInBatches(rows);
+
+  return writeQrPdfSheetFromRenderedLabels(renderedLabels, pdfPath);
+}
+
+export async function writeQrPdfSheetFromRenderedLabels(
+  renderedLabels: RenderedQrLabel[],
+  pdfPath: string,
+): Promise<string | null> {
+  if (renderedLabels.length === 0) {
     return null;
   }
 
   await mkdir(path.dirname(pdfPath), { recursive: true });
 
   const pdf = await PDFDocument.create();
-  const font = await pdf.embedFont(StandardFonts.Helvetica);
-  const boldFont = await pdf.embedFont(StandardFonts.HelveticaBold);
   const pageWidth = 595.28;
   const pageHeight = 841.89;
   const columns = 2;
@@ -202,59 +214,23 @@ export async function writeQrPdfSheet(
   let page = pdf.addPage([pageWidth, pageHeight]);
   let slotIndex = 0;
 
-  for (const row of rows) {
+  for (const renderedLabel of renderedLabels) {
     if (slotIndex > 0 && slotIndex % (columns * rowsPerPage) === 0) {
       page = pdf.addPage([pageWidth, pageHeight]);
     }
 
-    const pngBytes = await renderQrLabelPng(row);
-    const qrImage = await pdf.embedPng(pngBytes);
+    const qrImage = await pdf.embedPng(renderedLabel.pngBuffer);
     const positionIndex = slotIndex % (columns * rowsPerPage);
     const column = positionIndex % columns;
     const line = Math.floor(positionIndex / columns);
     const x = marginX + column * (cardWidth + gapX);
     const y = pageHeight - marginTop - (line + 1) * cardHeight - line * gapY;
 
-    page.drawRectangle({
+    page.drawImage(qrImage, {
       x,
       y,
       width: cardWidth,
       height: cardHeight,
-      borderColor: rgb(0.78, 0.84, 0.82),
-      borderWidth: 1,
-      color: rgb(0.98, 0.99, 0.985),
-    });
-
-    page.drawImage(qrImage, {
-      x: x + 12,
-      y: y + 12,
-      width: cardWidth - 24,
-      height: cardHeight - 24,
-    });
-
-    page.drawText(row.badge, {
-      x: x + 16,
-      y: y + cardHeight - 20,
-      size: 7,
-      font: boldFont,
-      color: rgb(0.27, 0.35, 0.33),
-    });
-
-    page.drawText(row.title, {
-      x: x + 16,
-      y: y + cardHeight - 34,
-      size: 11,
-      font: boldFont,
-      color: rgb(0.06, 0.12, 0.11),
-    });
-
-    page.drawText(row.subtitle, {
-      x: x + 16,
-      y: y + cardHeight - 48,
-      size: 8,
-      font,
-      color: rgb(0.27, 0.35, 0.33),
-      maxWidth: cardWidth - 32,
     });
 
     slotIndex += 1;
@@ -314,7 +290,7 @@ export function formatBranchQrSubtitle(outletName: string): string {
 }
 
 export function formatUnitQrSubtitle(unitType: string, branchCode: string): string {
-  return `${normalizeUnitType(unitType)} • ${branchCode}`.trim();
+  return `${normalizeUnitType(unitType)} | ${branchCode}`.trim();
 }
 
 export function extractUnitType(unitId: string): string {
@@ -374,6 +350,27 @@ async function renderQrLabelPng(row: QrRenderableRow): Promise<Buffer> {
   return rendered.asPng();
 }
 
+async function renderQrLabelsInBatches(
+  rows: QrRenderableRow[],
+  batchSize = 24,
+): Promise<RenderedQrLabel[]> {
+  const renderedLabels: RenderedQrLabel[] = [];
+
+  for (let index = 0; index < rows.length; index += batchSize) {
+    const batch = rows.slice(index, index + batchSize);
+    const renderedBatch = await Promise.all(
+      batch.map(async (row) => ({
+        row,
+        pngBuffer: await renderQrLabelPng(row),
+      })),
+    );
+
+    renderedLabels.push(...renderedBatch);
+  }
+
+  return renderedLabels;
+}
+
 function createQrLabelSvg(input: {
   badge: string;
   qrDataUrl: string;
@@ -406,11 +403,25 @@ async function exportQrAssetGroup(
   pdfPath: string,
 ): Promise<QrAssetSummary> {
   const renderableRows = toRenderableRows(rows);
-  const pngCount = await writeQrPngAssets(renderableRows, pngDirectory);
-  const writtenPdfPath = await writeQrPdfSheet(renderableRows, pdfPath);
+  const renderedLabels = await renderQrLabelsInBatches(renderableRows);
+
+  await mkdir(pngDirectory, { recursive: true });
+  await Promise.all(
+    renderedLabels.map((renderedLabel) =>
+      writeFile(
+        path.join(pngDirectory, renderedLabel.row.fileName),
+        renderedLabel.pngBuffer,
+      ),
+    ),
+  );
+
+  const writtenPdfPath = await writeQrPdfSheetFromRenderedLabels(
+    renderedLabels,
+    pdfPath,
+  );
 
   return {
-    pngCount,
+    pngCount: renderedLabels.length,
     pdfPath: writtenPdfPath,
     pngDirectory,
   };
