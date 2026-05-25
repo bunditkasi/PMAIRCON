@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import AdmZip from "adm-zip";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import { Resvg } from "@resvg/resvg-js";
 
@@ -13,6 +13,14 @@ export const DEFAULT_QR_EXPORT_BASE_URL = "https://pmaircon.vercel.app";
 
 const QR_LABEL_WIDTH = 420;
 const QR_LABEL_HEIGHT = 520;
+const QR_FONT_FILE = path.join(
+  process.cwd(),
+  "node_modules",
+  "@fontsource-variable",
+  "inter",
+  "files",
+  "inter-latin-wght-normal.woff2",
+);
 
 export interface BranchQrExportRow {
   id: string;
@@ -257,6 +265,8 @@ export async function writeQrPdfSheetFromRenderedLabels(
   await mkdir(path.dirname(pdfPath), { recursive: true });
 
   const pdf = await PDFDocument.create();
+  const headingFont = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const bodyFont = await pdf.embedFont(StandardFonts.Helvetica);
   const pageWidth = 595.28;
   const pageHeight = 841.89;
   const columns = 2;
@@ -268,6 +278,10 @@ export async function writeQrPdfSheetFromRenderedLabels(
   const gapY = 18;
   const cardWidth = (pageWidth - marginX * 2 - gapX) / columns;
   const cardHeight = (pageHeight - marginTop - marginBottom - gapY * (rowsPerPage - 1)) / rowsPerPage;
+  const cardPadding = 18;
+  const titleSize = 16;
+  const subtitleSize = 11;
+  const imageTopGap = 56;
 
   let page = pdf.addPage([pageWidth, pageHeight]);
   let slotIndex = 0;
@@ -283,12 +297,34 @@ export async function writeQrPdfSheetFromRenderedLabels(
     const line = Math.floor(positionIndex / columns);
     const x = marginX + column * (cardWidth + gapX);
     const y = pageHeight - marginTop - (line + 1) * cardHeight - line * gapY;
+    const titleY = y + cardHeight - cardPadding - titleSize;
+    const subtitleY = titleY - 18;
+    const imageX = x + cardPadding;
+    const imageY = y + cardPadding;
+    const imageWidth = cardWidth - cardPadding * 2;
+    const imageHeight = cardHeight - imageTopGap - cardPadding;
+
+    page.drawText(renderedLabel.row.title, {
+      x: x + cardPadding,
+      y: titleY,
+      size: titleSize,
+      font: headingFont,
+      color: rgb(0.06, 0.17, 0.15),
+    });
+
+    page.drawText(renderedLabel.row.subtitle, {
+      x: x + cardPadding,
+      y: subtitleY,
+      size: subtitleSize,
+      font: bodyFont,
+      color: rgb(0.27, 0.38, 0.36),
+    });
 
     page.drawImage(qrImage, {
-      x,
-      y,
-      width: cardWidth,
-      height: cardHeight,
+      x: imageX,
+      y: imageY,
+      width: imageWidth,
+      height: imageHeight,
     });
 
     slotIndex += 1;
@@ -452,6 +488,11 @@ async function renderQrLabelPng(row: QrRenderableRow): Promise<Buffer> {
       mode: "width",
       value: QR_LABEL_WIDTH,
     },
+    font: {
+      defaultFontFamily: "Inter",
+      fontFiles: [QR_FONT_FILE],
+      loadSystemFonts: false,
+    },
   }).render();
 
   return rendered.asPng();
@@ -493,13 +534,13 @@ function createQrLabelSvg(input: {
   return `
     <svg xmlns="http://www.w3.org/2000/svg" width="${QR_LABEL_WIDTH}" height="${QR_LABEL_HEIGHT}" viewBox="0 0 ${QR_LABEL_WIDTH} ${QR_LABEL_HEIGHT}">
       <rect x="8" y="8" width="${QR_LABEL_WIDTH - 16}" height="${QR_LABEL_HEIGHT - 16}" rx="28" fill="#FCFDFC" stroke="#C9D7D0" stroke-width="2"/>
-      <text x="32" y="48" font-size="12" font-family="Arial, sans-serif" fill="#46625B" font-weight="700" letter-spacing="2">${badge}</text>
-      <text x="32" y="84" font-size="34" font-family="Arial, sans-serif" fill="#0F2B25" font-weight="700">${title}</text>
-      <text x="32" y="116" font-size="18" font-family="Arial, sans-serif" fill="#46625B">${subtitle}</text>
+      <text x="32" y="48" font-size="12" font-family="Inter" fill="#46625B" font-weight="700" letter-spacing="2">${badge}</text>
+      <text x="32" y="84" font-size="34" font-family="Inter" fill="#0F2B25" font-weight="700">${title}</text>
+      <text x="32" y="116" font-size="18" font-family="Inter" fill="#46625B">${subtitle}</text>
       <rect x="70" y="144" width="280" height="280" rx="20" fill="#FFFFFF" stroke="#D9E5E0" stroke-width="2"/>
       <image x="86" y="160" width="248" height="248" href="${input.qrDataUrl}" />
-      <text x="32" y="458" font-size="14" font-family="Arial, sans-serif" fill="#46625B" font-weight="700">Scan to open record</text>
-      <text x="32" y="486" font-size="11" font-family="Arial, sans-serif" fill="#6C857D">${targetUrl}</text>
+      <text x="32" y="458" font-size="14" font-family="Inter" fill="#46625B" font-weight="700">Scan to open record</text>
+      <text x="32" y="486" font-size="11" font-family="Inter" fill="#6C857D">${targetUrl}</text>
     </svg>
   `.trim();
 }
