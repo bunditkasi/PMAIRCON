@@ -96,10 +96,10 @@ export function QrConsole({ regions }: QrConsoleProps) {
           </SelectInput>
         </FieldWrapper>
 
-        <FieldWrapper label="Branch codes (optional, comma separated)" spanTwo>
+        <FieldWrapper label="Branch codes or 4-letter outlet names (optional, comma separated)" spanTwo>
           <TextInput
             name="branchCodes"
-            placeholder="BC01, BE01, BE02"
+            placeholder="BC01, SAPS, BE01, TCHL"
           />
         </FieldWrapper>
 

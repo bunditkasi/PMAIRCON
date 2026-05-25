@@ -1,7 +1,10 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
-import { fetchLiveSheetCollections } from "../google/sheets-live";
+import {
+  fetchLiveSheetCollections,
+  type LiveSheetCollections,
+} from "../google/sheets-live";
 import {
   DEFAULT_QR_EXPORT_BASE_URL,
   executeQrExport,
@@ -38,13 +41,17 @@ export async function runQrConsoleExport(
   }
 
   const safeRegion = input.region?.trim() ?? "";
+  const resolvedBranchCodes = resolveBranchCodes(
+    collections,
+    input.branchCodes ?? [],
+  );
   const mode = input.mode ?? "branches";
   const includeBranches = mode === "branches" || mode === "both";
   const includeUnits = mode === "units" || mode === "both";
   const outputRoot = path.join(
     QR_CONSOLE_EXPORT_ROOT,
     buildExportFolderName({
-      branchCodes: input.branchCodes ?? [],
+      branchCodes: resolvedBranchCodes,
       mode,
       region: safeRegion,
     }),
@@ -55,14 +62,14 @@ export async function runQrConsoleExport(
   const result = await executeQrExport(collections, {
     appBaseUrl: env.APP_BASE_URL?.trim() || DEFAULT_QR_EXPORT_BASE_URL,
     outputRoot,
-    branchCodes: input.branchCodes ?? [],
+    branchCodes: resolvedBranchCodes,
     regions: safeRegion ? [safeRegion] : [],
     includeBranches,
     includeUnits,
     zipOutputs: input.zipOutputs ?? true,
     manifestData: {
       region: safeRegion,
-      branchCodes: input.branchCodes ?? [],
+      branchCodes: resolvedBranchCodes,
       mode,
       source: "qr-console",
     },
@@ -72,6 +79,47 @@ export async function runQrConsoleExport(
     ...result,
     outputRoot,
   };
+}
+
+export function resolveBranchCodes(
+  collections: LiveSheetCollections,
+  selectors: string[],
+): string[] {
+  const branchCodeByAlias = new Map<string, string>();
+
+  for (const branch of collections.branches) {
+    const branchCode = branch.branchCode.trim().toUpperCase();
+    const outletName = branch.outletName.trim().toUpperCase();
+
+    if (branchCode) {
+      branchCodeByAlias.set(branchCode, branchCode);
+    }
+
+    if (outletName) {
+      branchCodeByAlias.set(outletName, branchCode);
+    }
+  }
+
+  const resolvedCodes = new Set<string>();
+
+  for (const selector of selectors) {
+    const normalizedSelector = selector.trim().toUpperCase();
+
+    if (!normalizedSelector) {
+      continue;
+    }
+
+    const branchCode = branchCodeByAlias.get(normalizedSelector);
+
+    if (branchCode) {
+      resolvedCodes.add(branchCode);
+      continue;
+    }
+
+    resolvedCodes.add(normalizedSelector);
+  }
+
+  return Array.from(resolvedCodes);
 }
 
 function buildExportFolderName(input: {
