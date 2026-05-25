@@ -14,9 +14,11 @@ export interface ExportQrCliOptions {
   appBaseUrl: string;
   branchCodes: string[];
   unitIds: string[];
+  regions: string[];
   includeBranches: boolean;
   includeUnits: boolean;
   outputDir: string;
+  zipOutputs: boolean;
 }
 
 export function parseExportQrArgs(
@@ -29,6 +31,8 @@ export function parseExportQrArgs(
   let includeUnits = true;
   let branchCodes: string[] = [];
   let unitIds: string[] = [];
+  let regions: string[] = [];
+  let zipOutputs = true;
 
   for (const arg of argv) {
     if (arg === "--branch-only") {
@@ -63,8 +67,18 @@ export function parseExportQrArgs(
       continue;
     }
 
+    if (arg.startsWith("--regions=")) {
+      regions = splitArgList(arg.slice("--regions=".length));
+      continue;
+    }
+
     if (arg.startsWith("--units=")) {
       unitIds = splitArgList(arg.slice("--units=".length));
+      continue;
+    }
+
+    if (arg === "--no-zip") {
+      zipOutputs = false;
       continue;
     }
 
@@ -75,9 +89,11 @@ export function parseExportQrArgs(
     appBaseUrl,
     branchCodes,
     unitIds,
+    regions,
     includeBranches,
     includeUnits,
     outputDir,
+    zipOutputs,
   };
 }
 
@@ -96,11 +112,15 @@ export async function main(
 
   const exportRows = buildQrExportRows(collections, options.appBaseUrl);
   const branchRows = options.includeBranches
-    ? filterBranchQrExportRows(exportRows.branchRows, options.branchCodes)
+    ? filterBranchQrExportRows(exportRows.branchRows, {
+        branchCodes: options.branchCodes,
+        regions: options.regions,
+      })
     : [];
   const unitRows = options.includeUnits
     ? filterUnitQrExportRows(exportRows.unitRows, {
         branchCodes: options.branchCodes,
+        regions: options.regions,
         unitIds: options.unitIds,
       })
     : [];
@@ -111,11 +131,21 @@ export async function main(
     outputRoot: options.outputDir,
     includeBranches: options.includeBranches,
     includeUnits: options.includeUnits,
+    zipOutputs: options.zipOutputs,
+    manifestData: {
+      appBaseUrl: options.appBaseUrl,
+      branchCodes: options.branchCodes,
+      unitIds: options.unitIds,
+      regions: options.regions,
+      includeBranches: options.includeBranches,
+      includeUnits: options.includeUnits,
+    },
   });
 
   process.stdout.write(formatSummary({
     assetSummary,
     branchCount: branchRows.length,
+    regions: options.regions,
     skippedBranchCount: exportRows.skippedBranchCount,
     skippedUnitCount: exportRows.skippedUnitCount,
     unitCount: unitRows.length,
@@ -125,16 +155,22 @@ export async function main(
 export function formatSummary(input: {
   branchCount: number;
   unitCount: number;
+  regions: string[];
   skippedBranchCount: number;
   skippedUnitCount: number;
   assetSummary: Awaited<ReturnType<typeof exportQrAssets>>;
 }) {
   const lines = [
     "QR export complete",
+    `Regions: ${input.regions.length > 0 ? input.regions.join(", ") : "all"}`,
     `Branch PNGs: ${input.assetSummary.branches?.pngCount ?? 0}`,
     `Unit PNGs: ${input.assetSummary.units?.pngCount ?? 0}`,
     `Branch PDF: ${input.assetSummary.branches?.pdfPath ?? "not generated"}`,
     `Unit PDF: ${input.assetSummary.units?.pdfPath ?? "not generated"}`,
+    `Branch ZIP: ${input.assetSummary.branches?.zipPath ?? "not generated"}`,
+    `Unit ZIP: ${input.assetSummary.units?.zipPath ?? "not generated"}`,
+    `Branch manifest: ${input.assetSummary.branches?.manifestPath ?? "not generated"}`,
+    `Unit manifest: ${input.assetSummary.units?.manifestPath ?? "not generated"}`,
     `Selected branches exported: ${input.branchCount}`,
     `Selected units exported: ${input.unitCount}`,
     `Skipped branch rows: ${input.skippedBranchCount}`,

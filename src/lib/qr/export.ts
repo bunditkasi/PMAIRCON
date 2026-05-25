@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import AdmZip from "adm-zip";
 import { PDFDocument } from "pdf-lib";
 import QRCode from "qrcode";
 import { Resvg } from "@resvg/resvg-js";
@@ -17,6 +18,7 @@ export interface BranchQrExportRow {
   id: string;
   branchCode: string;
   outletName: string;
+  region: string;
   targetUrl: string;
   fileName: string;
   title: string;
@@ -29,6 +31,7 @@ export interface UnitQrExportRow {
   unitId: string;
   unitType: string;
   branchCode: string;
+  region: string;
   targetUrl: string;
   fileName: string;
   title: string;
@@ -54,6 +57,8 @@ export interface QrAssetSummary {
   pngCount: number;
   pdfPath: string | null;
   pngDirectory: string;
+  zipPath?: string | null;
+  manifestPath?: string | null;
 }
 
 export interface QrRenderableRow {
@@ -87,6 +92,7 @@ export function buildQrExportRows(
       id: branch.branchCode,
       branchCode: branch.branchCode,
       outletName: branch.outletName || "",
+      region: branch.region || "",
       targetUrl: buildBranchQrTarget(appBaseUrl, branch.branchCode),
       fileName: `${branch.branchCode}.png`,
       title: branch.branchCode,
@@ -97,6 +103,9 @@ export function buildQrExportRows(
 
   const unitRows: UnitQrExportRow[] = [];
   let skippedUnitCount = 0;
+  const regionByBranchCode = new Map(
+    collections.branches.map((branch) => [branch.branchCode, branch.region || ""]),
+  );
 
   for (const unit of collections.units) {
     if (!unit.unitId || !unit.branchCode) {
@@ -111,6 +120,7 @@ export function buildQrExportRows(
       unitId: unit.unitId,
       unitType,
       branchCode: unit.branchCode,
+      region: regionByBranchCode.get(unit.branchCode) || "",
       targetUrl: buildUnitQrTarget(appBaseUrl, unit.unitId),
       fileName: `${unit.unitId}.png`,
       title: unit.unitId,
@@ -129,15 +139,22 @@ export function buildQrExportRows(
 
 export function filterBranchQrExportRows(
   rows: BranchQrExportRow[],
-  branchCodes: string[] = [],
+  options: {
+    branchCodes?: string[];
+    regions?: string[];
+  } = {},
 ): BranchQrExportRow[] {
-  const selected = normalizeSelection(branchCodes);
+  const selectedBranchCodes = normalizeSelection(options.branchCodes ?? []);
+  const selectedRegions = normalizeSelection(options.regions ?? []);
 
-  if (selected.size === 0) {
-    return rows;
-  }
+  return rows.filter((row) => {
+    const matchesBranchCode =
+      selectedBranchCodes.size === 0 || selectedBranchCodes.has(row.branchCode.toUpperCase());
+    const matchesRegion =
+      selectedRegions.size === 0 || selectedRegions.has((row.region || "").trim().toUpperCase());
 
-  return rows.filter((row) => selected.has(row.branchCode.toUpperCase()));
+    return matchesBranchCode && matchesRegion;
+  });
 }
 
 export function filterUnitQrExportRows(
@@ -145,21 +162,34 @@ export function filterUnitQrExportRows(
   options: {
     branchCodes?: string[];
     unitIds?: string[];
+    regions?: string[];
   } = {},
 ): UnitQrExportRow[] {
   const selectedUnits = normalizeSelection(options.unitIds ?? []);
 
   if (selectedUnits.size > 0) {
-    return rows.filter((row) => selectedUnits.has(row.unitId.toUpperCase()));
+    const selectedRegions = normalizeSelection(options.regions ?? []);
+
+    return rows.filter((row) => {
+      const matchesUnit = selectedUnits.has(row.unitId.toUpperCase());
+      const matchesRegion =
+        selectedRegions.size === 0 || selectedRegions.has((row.region || "").trim().toUpperCase());
+
+      return matchesUnit && matchesRegion;
+    });
   }
 
   const selectedBranches = normalizeSelection(options.branchCodes ?? []);
+  const selectedRegions = normalizeSelection(options.regions ?? []);
 
-  if (selectedBranches.size === 0) {
-    return rows;
-  }
+  return rows.filter((row) => {
+    const matchesBranch =
+      selectedBranches.size === 0 || selectedBranches.has(row.branchCode.toUpperCase());
+    const matchesRegion =
+      selectedRegions.size === 0 || selectedRegions.has((row.region || "").trim().toUpperCase());
 
-  return rows.filter((row) => selectedBranches.has(row.branchCode.toUpperCase()));
+    return matchesBranch && matchesRegion;
+  });
 }
 
 export async function writeQrPngAssets(
@@ -246,6 +276,8 @@ export async function exportQrAssets(input: {
   outputRoot: string;
   includeBranches: boolean;
   includeUnits: boolean;
+  zipOutputs?: boolean;
+  manifestData?: Record<string, unknown>;
 }): Promise<{
   branches: QrAssetSummary | null;
   units: QrAssetSummary | null;
@@ -258,6 +290,8 @@ export async function exportQrAssets(input: {
         input.branchRows,
         branchesDirectory,
         path.join(input.outputRoot, "branch-qr-sheet.pdf"),
+        input.zipOutputs ?? false,
+        input.manifestData ?? {},
       )
     : null;
 
@@ -266,6 +300,8 @@ export async function exportQrAssets(input: {
         input.unitRows,
         unitsDirectory,
         path.join(input.outputRoot, "unit-qr-sheet.pdf"),
+        input.zipOutputs ?? false,
+        input.manifestData ?? {},
       )
     : null;
 
@@ -401,6 +437,8 @@ async function exportQrAssetGroup(
   rows: Array<BranchQrExportRow | UnitQrExportRow>,
   pngDirectory: string,
   pdfPath: string,
+  zipOutputs: boolean,
+  manifestData: Record<string, unknown>,
 ): Promise<QrAssetSummary> {
   const renderableRows = toRenderableRows(rows);
   const renderedLabels = await renderQrLabelsInBatches(renderableRows);
@@ -419,10 +457,66 @@ async function exportQrAssetGroup(
     renderedLabels,
     pdfPath,
   );
+  let zipPath: string | null = null;
+  let manifestPath: string | null = null;
+
+  if (zipOutputs) {
+    const manifest = {
+      ...manifestData,
+      generatedAt: new Date().toISOString(),
+      pngCount: renderedLabels.length,
+      pdfPath: writtenPdfPath,
+      pngDirectory,
+      ids: rows.map((row) => row.id),
+    };
+
+    manifestPath = path.join(path.dirname(pdfPath), `${path.parse(pdfPath).name}.manifest.json`);
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+    zipPath = path.join(path.dirname(pdfPath), `${path.parse(pdfPath).name}.zip`);
+    await writeZipBundle({
+      pngDirectory,
+      pdfPath: writtenPdfPath,
+      manifestPath,
+      zipPath,
+    });
+  }
 
   return {
     pngCount: renderedLabels.length,
     pdfPath: writtenPdfPath,
     pngDirectory,
+    zipPath,
+    manifestPath,
   };
+}
+
+async function writeZipBundle(input: {
+  pngDirectory: string;
+  pdfPath: string | null;
+  manifestPath: string | null;
+  zipPath: string;
+}) {
+  const zip = new AdmZip();
+
+  zip.addLocalFolder(input.pngDirectory, path.basename(input.pngDirectory));
+
+  if (input.pdfPath) {
+    zip.addLocalFile(input.pdfPath, "", path.basename(input.pdfPath));
+  }
+
+  if (input.manifestPath) {
+    zip.addLocalFile(input.manifestPath, "", path.basename(input.manifestPath));
+  }
+
+  await mkdir(path.dirname(input.zipPath), { recursive: true });
+  await new Promise<void>((resolve, reject) => {
+    zip.writeZip(input.zipPath, (error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  });
 }

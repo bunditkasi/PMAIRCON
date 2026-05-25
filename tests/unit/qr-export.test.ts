@@ -43,6 +43,7 @@ describe("qr export helpers", () => {
     expect(result.branchRows).toEqual([
       expect.objectContaining({
         branchCode: "BC01",
+        region: "Central",
         title: "BC01",
         subtitle: "SAPS",
         targetUrl: "https://example.com/branches/BC01",
@@ -52,18 +53,20 @@ describe("qr export helpers", () => {
       expect.objectContaining({
         unitId: "BC01-CS-01",
         unitType: "CS",
+        region: "Central",
         subtitle: "CS | BC01",
         targetUrl: "https://example.com/units/BC01-CS-01",
       }),
     ]);
   });
 
-  it("filters branch rows by selected branch codes", () => {
+  it("filters branch rows by selected branch codes and regions", () => {
     const rows = [
       {
         id: "BC01",
         branchCode: "BC01",
         outletName: "A",
+        region: "East",
         targetUrl: "https://example.com/branches/BC01",
         fileName: "BC01.png",
         title: "BC01",
@@ -74,6 +77,7 @@ describe("qr export helpers", () => {
         id: "BE01",
         branchCode: "BE01",
         outletName: "B",
+        region: "West",
         targetUrl: "https://example.com/branches/BE01",
         fileName: "BE01.png",
         title: "BE01",
@@ -82,20 +86,30 @@ describe("qr export helpers", () => {
       },
     ];
 
-    expect(filterBranchQrExportRows(rows, ["be01"])).toEqual([rows[1]]);
+    expect(
+      filterBranchQrExportRows(rows, {
+        branchCodes: ["be01"],
+      }),
+    ).toEqual([rows[1]]);
+    expect(
+      filterBranchQrExportRows(rows, {
+        regions: ["east"],
+      }),
+    ).toEqual([rows[0]]);
   });
 
-  it("filters unit rows by selected unit ids or branch codes", () => {
+  it("filters unit rows by selected unit ids, branch codes, and regions", () => {
     const rows = [
       {
         id: "BC01-CS-01",
         unitId: "BC01-CS-01",
         unitType: "CS",
         branchCode: "BC01",
+        region: "Central",
         targetUrl: "https://example.com/units/BC01-CS-01",
         fileName: "BC01-CS-01.png",
         title: "BC01-CS-01",
-        subtitle: "CS • BC01",
+        subtitle: "CS | BC01",
         badge: "UNIT",
       },
       {
@@ -103,16 +117,18 @@ describe("qr export helpers", () => {
         unitId: "BE01-CT-01",
         unitType: "CT",
         branchCode: "BE01",
+        region: "East",
         targetUrl: "https://example.com/units/BE01-CT-01",
         fileName: "BE01-CT-01.png",
         title: "BE01-CT-01",
-        subtitle: "CT • BE01",
+        subtitle: "CT | BE01",
         badge: "UNIT",
       },
     ];
 
     expect(filterUnitQrExportRows(rows, { branchCodes: ["bc01"] })).toEqual([rows[0]]);
     expect(filterUnitQrExportRows(rows, { unitIds: ["BE01-CT-01"] })).toEqual([rows[1]]);
+    expect(filterUnitQrExportRows(rows, { regions: ["east"] })).toEqual([rows[1]]);
   });
 
   it("formats fallback subtitles safely", () => {
