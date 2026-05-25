@@ -53,8 +53,9 @@ describe("qr export helpers", () => {
       expect.objectContaining({
         unitId: "BC01-CS-01",
         unitType: "CS",
+        outletName: "SAPS",
         region: "Central",
-        subtitle: "CS | BC01",
+        subtitle: "SAPS",
         targetUrl: "https://example.com/units/BC01-CS-01",
       }),
     ]);
@@ -105,11 +106,12 @@ describe("qr export helpers", () => {
         unitId: "BC01-CS-01",
         unitType: "CS",
         branchCode: "BC01",
+        outletName: "SAPS",
         region: "Central",
         targetUrl: "https://example.com/units/BC01-CS-01",
         fileName: "BC01-CS-01.png",
         title: "BC01-CS-01",
-        subtitle: "CS | BC01",
+        subtitle: "SAPS",
         badge: "UNIT",
       },
       {
@@ -117,11 +119,12 @@ describe("qr export helpers", () => {
         unitId: "BE01-CT-01",
         unitType: "CT",
         branchCode: "BE01",
+        outletName: "TCHL",
         region: "East",
         targetUrl: "https://example.com/units/BE01-CT-01",
         fileName: "BE01-CT-01.png",
         title: "BE01-CT-01",
-        subtitle: "CT | BE01",
+        subtitle: "TCHL",
         badge: "UNIT",
       },
     ];
@@ -133,6 +136,6 @@ describe("qr export helpers", () => {
 
   it("formats fallback subtitles safely", () => {
     expect(formatBranchQrSubtitle("")).toBe("UNKNOWN OUTLET");
-    expect(formatUnitQrSubtitle("", "BC01")).toBe("UNIT | BC01");
+    expect(formatUnitQrSubtitle("", "BC01")).toBe("BC01");
   });
 });

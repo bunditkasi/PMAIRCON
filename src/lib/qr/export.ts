@@ -31,6 +31,7 @@ export interface UnitQrExportRow {
   unitId: string;
   unitType: string;
   branchCode: string;
+  outletName: string;
   region: string;
   targetUrl: string;
   fileName: string;
@@ -129,6 +130,9 @@ export function buildQrExportRows(
   const regionByBranchCode = new Map(
     collections.branches.map((branch) => [branch.branchCode, branch.region || ""]),
   );
+  const outletNameByBranchCode = new Map(
+    collections.branches.map((branch) => [branch.branchCode, branch.outletName || ""]),
+  );
 
   for (const unit of collections.units) {
     if (!unit.unitId || !unit.branchCode) {
@@ -143,11 +147,12 @@ export function buildQrExportRows(
       unitId: unit.unitId,
       unitType,
       branchCode: unit.branchCode,
+      outletName: outletNameByBranchCode.get(unit.branchCode) || "",
       region: regionByBranchCode.get(unit.branchCode) || "",
       targetUrl: buildUnitQrTarget(appBaseUrl, unit.unitId),
       fileName: `${unit.unitId}.png`,
       title: unit.unitId,
-      subtitle: formatUnitQrSubtitle(unitType, unit.branchCode),
+      subtitle: formatUnitQrSubtitle(outletNameByBranchCode.get(unit.branchCode) || "", unit.branchCode),
       badge: "UNIT",
     });
   }
@@ -391,8 +396,8 @@ export function formatBranchQrSubtitle(outletName: string): string {
   return outletName.trim() || "UNKNOWN OUTLET";
 }
 
-export function formatUnitQrSubtitle(unitType: string, branchCode: string): string {
-  return `${normalizeUnitType(unitType)} | ${branchCode}`.trim();
+export function formatUnitQrSubtitle(outletName: string, branchCode: string): string {
+  return (outletName.trim() || branchCode.trim() || "UNKNOWN OUTLET").toUpperCase();
 }
 
 export function extractUnitType(unitId: string): string {
