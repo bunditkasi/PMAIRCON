@@ -22,8 +22,7 @@ export interface QrConsoleResponse extends QrExportExecutionResult {
 }
 
 export const QR_CONSOLE_EXPORT_ROOT = path.resolve(
-  process.cwd(),
-  "tmp/qr-console-downloads",
+  process.env.VERCEL ? "/tmp/qr-console-downloads" : path.join(process.cwd(), "tmp/qr-console-downloads"),
 );
 
 export async function runQrConsoleExport(
