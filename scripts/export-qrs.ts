@@ -3,11 +3,8 @@ import { fileURLToPath } from "node:url";
 
 import { fetchLiveSheetCollections } from "../src/lib/google/sheets-live";
 import {
-  buildQrExportRows,
   DEFAULT_QR_EXPORT_BASE_URL,
-  exportQrAssets,
-  filterBranchQrExportRows,
-  filterUnitQrExportRows,
+  executeQrExport,
 } from "../src/lib/qr/export";
 
 export interface ExportQrCliOptions {
@@ -110,25 +107,12 @@ export async function main(
     );
   }
 
-  const exportRows = buildQrExportRows(collections, options.appBaseUrl);
-  const branchRows = options.includeBranches
-    ? filterBranchQrExportRows(exportRows.branchRows, {
-        branchCodes: options.branchCodes,
-        regions: options.regions,
-      })
-    : [];
-  const unitRows = options.includeUnits
-    ? filterUnitQrExportRows(exportRows.unitRows, {
-        branchCodes: options.branchCodes,
-        regions: options.regions,
-        unitIds: options.unitIds,
-      })
-    : [];
-
-  const assetSummary = await exportQrAssets({
-    branchRows,
-    unitRows,
+  const result = await executeQrExport(collections, {
+    appBaseUrl: options.appBaseUrl,
     outputRoot: options.outputDir,
+    branchCodes: options.branchCodes,
+    unitIds: options.unitIds,
+    regions: options.regions,
     includeBranches: options.includeBranches,
     includeUnits: options.includeUnits,
     zipOutputs: options.zipOutputs,
@@ -142,14 +126,12 @@ export async function main(
     },
   });
 
-  process.stdout.write(formatSummary({
-    assetSummary,
-    branchCount: branchRows.length,
-    regions: options.regions,
-    skippedBranchCount: exportRows.skippedBranchCount,
-    skippedUnitCount: exportRows.skippedUnitCount,
-    unitCount: unitRows.length,
-  }));
+  process.stdout.write(
+    formatSummary({
+      ...result,
+      regions: options.regions,
+    }),
+  );
 }
 
 export function formatSummary(input: {
@@ -158,7 +140,7 @@ export function formatSummary(input: {
   regions: string[];
   skippedBranchCount: number;
   skippedUnitCount: number;
-  assetSummary: Awaited<ReturnType<typeof exportQrAssets>>;
+  assetSummary: Awaited<ReturnType<typeof executeQrExport>>["assetSummary"];
 }) {
   const lines = [
     "QR export complete",

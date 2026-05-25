@@ -61,6 +61,29 @@ export interface QrAssetSummary {
   manifestPath?: string | null;
 }
 
+export interface QrExportExecutionOptions {
+  appBaseUrl?: string;
+  outputRoot: string;
+  branchCodes?: string[];
+  unitIds?: string[];
+  regions?: string[];
+  includeBranches: boolean;
+  includeUnits: boolean;
+  zipOutputs?: boolean;
+  manifestData?: Record<string, unknown>;
+}
+
+export interface QrExportExecutionResult {
+  branchCount: number;
+  unitCount: number;
+  skippedBranchCount: number;
+  skippedUnitCount: number;
+  assetSummary: {
+    branches: QrAssetSummary | null;
+    units: QrAssetSummary | null;
+  };
+}
+
 export interface QrRenderableRow {
   id: string;
   fileName: string;
@@ -306,6 +329,49 @@ export async function exportQrAssets(input: {
     : null;
 
   return { branches, units };
+}
+
+export async function executeQrExport(
+  collections: LiveSheetCollections,
+  options: QrExportExecutionOptions,
+): Promise<QrExportExecutionResult> {
+  const exportRows = buildQrExportRows(
+    collections,
+    options.appBaseUrl ?? DEFAULT_QR_EXPORT_BASE_URL,
+  );
+
+  const branchRows = options.includeBranches
+    ? filterBranchQrExportRows(exportRows.branchRows, {
+        branchCodes: options.branchCodes ?? [],
+        regions: options.regions ?? [],
+      })
+    : [];
+
+  const unitRows = options.includeUnits
+    ? filterUnitQrExportRows(exportRows.unitRows, {
+        branchCodes: options.branchCodes ?? [],
+        unitIds: options.unitIds ?? [],
+        regions: options.regions ?? [],
+      })
+    : [];
+
+  const assetSummary = await exportQrAssets({
+    branchRows,
+    unitRows,
+    outputRoot: options.outputRoot,
+    includeBranches: options.includeBranches,
+    includeUnits: options.includeUnits,
+    zipOutputs: options.zipOutputs ?? true,
+    manifestData: options.manifestData ?? {},
+  });
+
+  return {
+    branchCount: branchRows.length,
+    unitCount: unitRows.length,
+    skippedBranchCount: exportRows.skippedBranchCount,
+    skippedUnitCount: exportRows.skippedUnitCount,
+    assetSummary,
+  };
 }
 
 export function toRenderableRows(

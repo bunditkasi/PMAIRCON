@@ -28,6 +28,12 @@ export default function HomePage() {
           >
             Find branch
           </Link>
+          <Link
+            className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--text)]"
+            href="/admin/qr-console"
+          >
+            QR Console
+          </Link>
         </nav>
       </SectionCard>
     </AppShell>
