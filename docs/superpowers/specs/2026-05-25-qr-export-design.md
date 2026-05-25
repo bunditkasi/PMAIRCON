@@ -58,12 +58,30 @@ The export command should support:
 - exporting only selected branch codes
 - exporting only selected unit ids
 - exporting only branch QR codes or only unit QR codes
+- exporting by `region`
+- packaging exported assets into ZIP files for handoff
 
 The command should print a short summary at the end, including:
 - how many branch PNGs were generated
 - how many unit PNGs were generated
 - the PDF file paths
+- the ZIP file paths
 - any skipped rows
+
+## Region and packaging behavior
+
+- Region filtering should use the `region` field from the `Branches` sheet.
+- Region selection should filter:
+  - branch QR rows directly
+  - unit QR rows through their parent branch membership
+- If `--regions` is combined with `--branches`, the result should be the intersection of both filters.
+- After export, the script should optionally create:
+  - `branch-qrs.zip`
+  - `unit-qrs.zip`
+- Each ZIP should contain:
+  - PNG files
+  - the matching PDF sheet when generated
+  - a `manifest.json` file with export metadata
 
 ## Technical shape
 

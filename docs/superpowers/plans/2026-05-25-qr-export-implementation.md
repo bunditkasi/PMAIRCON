@@ -32,17 +32,23 @@
      - app base URL override
      - branch-only
      - unit-only
+     - selected regions
      - selected branch codes
      - selected unit ids
      - output directory override
    - Print a concise summary of generated files and skipped rows.
 
-6. Add tests.
+6. Add packaging and manifest support.
+   - Create ZIP files for branch and unit exports.
+   - Include `manifest.json` with filters, counts, timestamps, and generated file paths.
+
+7. Add tests.
    - Cover export row shaping and filtering.
    - Cover label formatting.
    - Cover CLI argument selection behavior.
+   - Cover region filtering and ZIP summary metadata.
 
-7. Verify end to end locally.
+8. Verify end to end locally.
    - Run targeted tests.
    - Run `lint`, `tsc`, and `build`.
    - Run the export script against live sheet data and confirm output files are created.
