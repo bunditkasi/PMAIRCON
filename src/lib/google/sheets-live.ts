@@ -24,6 +24,7 @@ export interface LiveSheetCollections {
   units: Array<{
     unitId: string;
     branchCode: string;
+    unitType?: string;
   }>;
   pmLogs: Array<{
     unitId: string;
@@ -100,6 +101,7 @@ export function mapSheetRowsToCollections(input: {
       .map((row) => ({
         unitId: row.unit_id,
         branchCode: row.branch_code,
+        unitType: row.unit_type || "",
       })),
     (unit) => unit.unitId,
   );

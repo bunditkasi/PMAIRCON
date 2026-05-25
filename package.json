@@ -12,11 +12,15 @@
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install chromium",
     "bootstrap:sheet": "tsx scripts/bootstrap-google-sheet.ts",
+    "export:qrs": "tsx scripts/export-qrs.ts",
     "generate:qrs": "tsx scripts/generate-qrs.ts",
     "import:source": "tsx scripts/import-source-data.ts"
   },
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "next": "15.5.18",
+    "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "xlsx": "^0.18.5"
@@ -27,6 +31,7 @@
     "@testing-library/jest-dom": "6.6.3",
     "@testing-library/react": "16.3.0",
     "@types/node": "22.15.29",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "19.1.6",
     "@types/react-dom": "19.1.5",
     "autoprefixer": "10.4.21",
