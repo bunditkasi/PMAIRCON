@@ -15,10 +15,10 @@ const QR_LABEL_WIDTH = 420;
 const QR_LABEL_HEIGHT = 520;
 const QR_FONT_FILE = path.join(
   process.cwd(),
-  "node_modules",
-  "open-sans-fonts",
-  "open-sans",
-  "Regular",
+  "src",
+  "lib",
+  "qr",
+  "fonts",
   "OpenSans-Regular.ttf",
 );
 
