@@ -15,6 +15,7 @@ interface ReportPageProps {
     supplier?: string;
     senior?: string;
     state?: string;
+    showOperational?: string;
   }>;
 }
 
@@ -43,6 +44,7 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
     hour12: false,
   }).format(new Date());
   const filters = normalizeDashboardFilters(params ?? {}, { today });
+  const showOperational = params?.showOperational === "1";
   const summary = summarizeDashboard(
     {
       branches: collections.branches,
@@ -53,6 +55,7 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
     {
       today,
       filters,
+      includeOperationalRows: showOperational,
     },
   );
 
@@ -84,6 +87,7 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
         seniors={collectUniqueValues(collections.branches.map((branch) => branch.seniorName ?? ""))}
         states={collectUniqueValues(collections.branches.map((branch) => branch.state))}
         suppliers={collectUniqueValues(collections.branches.map((branch) => branch.supplierName))}
+        showOperational={showOperational}
         summary={summary}
         years={collectReportYears(collections.pmLogs, filters.year)}
       />

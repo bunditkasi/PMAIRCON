@@ -56,7 +56,7 @@ vi.mock("../../src/lib/services/app-data", () => ({
 }));
 
 describe("ReportPage", () => {
-  it("renders filter controls and report sections", async () => {
+  it("renders filter controls and keeps operational tables hidden by default", async () => {
     const page = await ReportPage({
       searchParams: Promise.resolve({ year: "2026", month: "5", region: "Central" }),
     });
@@ -69,6 +69,26 @@ describe("ReportPage", () => {
     expect(screen.getByText("Overdue units")).toBeInTheDocument();
     expect(screen.getByText("% PM success by supplier")).toBeInTheDocument();
     expect(screen.getByText("Branches needing PM attention")).toBeInTheDocument();
+    expect(screen.getByText("Show operational tables")).toBeInTheDocument();
+    expect(
+      screen.getByText("Detailed branch and unit follow-up tables are hidden until requested."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Units needing PM attention")).not.toBeInTheDocument();
+  });
+
+  it("renders operational tables when explicitly requested", async () => {
+    const page = await ReportPage({
+      searchParams: Promise.resolve({
+        year: "2026",
+        month: "5",
+        region: "Central",
+        showOperational: "1",
+      }),
+    });
+
+    render(page);
+
+    expect(screen.getByText("Hide operational tables")).toBeInTheDocument();
     expect(screen.getByText("Units needing PM attention")).toBeInTheDocument();
   });
 });

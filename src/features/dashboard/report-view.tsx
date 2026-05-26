@@ -24,6 +24,7 @@ interface ReportViewProps {
   suppliers: string[];
   seniors: string[];
   states: string[];
+  showOperational: boolean;
 }
 
 export function ReportView({
@@ -34,7 +35,10 @@ export function ReportView({
   suppliers,
   seniors,
   states,
+  showOperational,
 }: ReportViewProps) {
+  const operationalHref = buildOperationalHref(filters, !showOperational);
+
   return (
     <>
       <DashboardFilterBar
@@ -108,50 +112,114 @@ export function ReportView({
         />
       </div>
 
-      <OperationalTable
-        eyebrow="Operational follow-up"
-        title="Branches needing PM attention"
-        columns={["Branch", "Region", "Supplier", "Senior", "Due", "Completed", "Overdue", "Action"]}
-        rows={summary.branchOperationalRows.map((row) => [
-          renderBranchCell(row),
-          row.region,
-          row.supplier,
-          row.senior,
-          String(row.dueUnits),
-          String(row.completedUnits),
-          String(row.overdueUnits),
+      <section className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)]">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+              Operational follow-up
+            </p>
+            <h2 className="mt-1 text-lg font-semibold text-[var(--text)]">
+              Branches needing PM attention
+            </h2>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">
+              Generate the detailed follow-up tables only when you need them.
+            </p>
+          </div>
           <Link
-            key={`${row.branchCode}-link`}
-            className="font-semibold text-[var(--accent)] hover:underline"
-            href={`/branches/${row.branchCode}`}
+            className="rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            href={operationalHref}
           >
-            Open branch
-          </Link>,
-        ])}
-      />
+            {showOperational ? "Hide operational tables" : "Show operational tables"}
+          </Link>
+        </div>
 
-      <OperationalTable
-        eyebrow="Unit follow-up"
-        title="Units needing PM attention"
-        columns={["Unit", "Region", "Supplier", "Latest PM", "Latest repair", "Repairs after PM", "Action"]}
-        rows={summary.unitOperationalRows.map((row) => [
-          renderUnitCell(row),
-          row.region,
-          row.supplier,
-          row.latestPmDate ?? "No PM logged",
-          row.latestRepairDate ?? "No repair logged",
-          String(row.repairsAfterLatestPm),
-          <Link
-            key={`${row.unitId}-link`}
-            className="font-semibold text-[var(--accent)] hover:underline"
-            href={`/units/${row.unitId}`}
-          >
-            Open unit
-          </Link>,
-        ])}
-      />
+        {showOperational ? (
+          <div className="mt-5 space-y-4">
+            <OperationalTable
+              eyebrow="Operational follow-up"
+              title="Branches needing PM attention"
+              columns={["Branch", "Region", "Supplier", "Senior", "Due", "Completed", "Overdue", "Action"]}
+              rows={summary.branchOperationalRows.map((row) => [
+                renderBranchCell(row),
+                row.region,
+                row.supplier,
+                row.senior,
+                String(row.dueUnits),
+                String(row.completedUnits),
+                String(row.overdueUnits),
+                <Link
+                  key={`${row.branchCode}-link`}
+                  className="font-semibold text-[var(--accent)] hover:underline"
+                  href={`/branches/${row.branchCode}`}
+                >
+                  Open branch
+                </Link>,
+              ])}
+            />
+
+            <OperationalTable
+              eyebrow="Unit follow-up"
+              title="Units needing PM attention"
+              columns={["Unit", "Region", "Supplier", "Latest PM", "Latest repair", "Repairs after PM", "Action"]}
+              rows={summary.unitOperationalRows.map((row) => [
+                renderUnitCell(row),
+                row.region,
+                row.supplier,
+                row.latestPmDate ?? "No PM logged",
+                row.latestRepairDate ?? "No repair logged",
+                String(row.repairsAfterLatestPm),
+                <Link
+                  key={`${row.unitId}-link`}
+                  className="font-semibold text-[var(--accent)] hover:underline"
+                  href={`/units/${row.unitId}`}
+                >
+                  Open unit
+                </Link>,
+              ])}
+            />
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-[var(--text-muted)]">
+            Detailed branch and unit follow-up tables are hidden until requested.
+          </p>
+        )}
+      </section>
     </>
   );
+}
+
+function buildOperationalHref(filters: DashboardFilters, shouldShowOperational: boolean) {
+  const params = new URLSearchParams();
+
+  params.set("year", String(filters.year));
+
+  if (filters.month != null) {
+    params.set("month", String(filters.month));
+  } else if (filters.cycle != null) {
+    params.set("cycle", String(filters.cycle));
+  }
+
+  if (filters.region) {
+    params.set("region", filters.region);
+  }
+
+  if (filters.supplier) {
+    params.set("supplier", filters.supplier);
+  }
+
+  if (filters.senior) {
+    params.set("senior", filters.senior);
+  }
+
+  if (filters.state) {
+    params.set("state", filters.state);
+  }
+
+  if (shouldShowOperational) {
+    params.set("showOperational", "1");
+  }
+
+  return `/report?${params.toString()}`;
 }
 
 function renderBranchCell(row: BranchOperationalRow) {

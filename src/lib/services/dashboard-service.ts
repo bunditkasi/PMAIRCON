@@ -114,6 +114,7 @@ interface DashboardSummaryOptions {
   year?: number;
   activeRegion?: string | null;
   filters?: DashboardFilters;
+  includeOperationalRows?: boolean;
 }
 
 export function summarizeDashboard(
@@ -192,6 +193,7 @@ export function summarizeDashboard(
   const overdueUnits = activePeriodDueUnits.filter(
     (unit) => !completedActivePeriodUnitIds.has(unit.unitId),
   ).length;
+  const includeOperationalRows = options.includeOperationalRows ?? true;
 
   return {
     totalBranches: scopedBranches.length,
@@ -249,20 +251,24 @@ export function summarizeDashboard(
       activeCycleMonth,
       donePmLogs,
     }),
-    branchOperationalRows: summarizeBranchOperationalRows({
-      scopedBranches,
-      scopedUnits,
-      selectedYear,
-      selectedMonth,
-      activeCycleMonth,
-      donePmLogs,
-    }),
-    unitOperationalRows: summarizeUnitOperationalRows({
-      branchesByCode,
-      scopedUnits,
-      pmLogs: scopedPmLogs,
-      repairLogs: scopedRepairLogs,
-    }),
+    branchOperationalRows: includeOperationalRows
+      ? summarizeBranchOperationalRows({
+          scopedBranches,
+          scopedUnits,
+          selectedYear,
+          selectedMonth,
+          activeCycleMonth,
+          donePmLogs,
+        })
+      : [],
+    unitOperationalRows: includeOperationalRows
+      ? summarizeUnitOperationalRows({
+          branchesByCode,
+          scopedUnits,
+          pmLogs: scopedPmLogs,
+          repairLogs: scopedRepairLogs,
+        })
+      : [],
   };
 }
 
