@@ -36,6 +36,9 @@ describe("BranchDetail", () => {
     expect(mapLink).toHaveAttribute("target", "_blank");
     expect(screen.getByText(/Klangsub Engineer/)).toBeInTheDocument();
     expect(
+      screen.getByRole("link", { name: "Submit PM for branch" }),
+    ).toHaveAttribute("href", "/branches/BC01/pm/new");
+    expect(
       screen.getByRole("link", { name: "BC01-CS-01" }),
     ).toBeInTheDocument();
   });
@@ -59,5 +62,8 @@ describe("BranchDetail", () => {
     );
 
     expect(screen.queryByRole("link", { name: "Open map" })).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: "Submit PM for branch" }),
+    ).toBeNull();
   });
 });

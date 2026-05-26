@@ -74,6 +74,17 @@ export function BranchDetail({ detail }: BranchDetailProps) {
             ))}
           </ul>
         )}
+
+        {detail.units.length > 0 ? (
+          <div className="mt-6 flex justify-end border-t border-[var(--border)] pt-5">
+            <a
+              className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)]"
+              href={`/branches/${detail.branch.branchCode}/pm/new`}
+            >
+              Submit PM for branch
+            </a>
+          </div>
+        ) : null}
       </div>
     </SectionCard>
   );
