@@ -2,12 +2,12 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { SummaryCards } from "../../src/features/dashboard/summary-cards";
+import { ReportSummaryCards } from "../../src/features/dashboard/report-summary-cards";
 
-describe("SummaryCards", () => {
-  it("renders the original dashboard KPI set", () => {
+describe("ReportSummaryCards", () => {
+  it("renders the report KPI set", () => {
     render(
-      <SummaryCards
+      <ReportSummaryCards
         summary={{
           totalBranches: 955,
           totalUnits: 10925,
@@ -31,14 +31,13 @@ describe("SummaryCards", () => {
       />,
     );
 
-    expect(screen.getByText("Total branches")).toBeInTheDocument();
-    expect(screen.getByText("Total units")).toBeInTheDocument();
-    expect(screen.getByText("PM logged units")).toBeInTheDocument();
+    expect(screen.getByText("Overdue units")).toBeInTheDocument();
+    expect(screen.getByText("Due this month")).toBeInTheDocument();
+    expect(screen.getByText("Due this cycle")).toBeInTheDocument();
     expect(screen.getByText("Open repairs")).toBeInTheDocument();
     expect(screen.getByText("Annual PM completion")).toBeInTheDocument();
     expect(screen.getByText("Current cycle completion")).toBeInTheDocument();
     expect(screen.getByText("76.5%")).toBeInTheDocument();
     expect(screen.getByText("48.25%")).toBeInTheDocument();
-    expect(screen.getByText("Scoped to Central")).toBeInTheDocument();
   });
 });

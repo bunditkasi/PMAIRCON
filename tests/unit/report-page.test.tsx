@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import DashboardPage from "../../src/app/dashboard/page";
+import ReportPage from "../../src/app/report/page";
 
 vi.mock("../../src/lib/services/app-data", () => ({
   loadAppDataCollections: vi.fn(async () => ({
@@ -55,29 +55,20 @@ vi.mock("../../src/lib/services/app-data", () => ({
   })),
 }));
 
-describe("DashboardPage", () => {
-  it("renders the original dashboard overview experience", async () => {
-    const page = await DashboardPage({
-      searchParams: Promise.resolve({ region: "Central" }),
+describe("ReportPage", () => {
+  it("renders filter controls and report sections", async () => {
+    const page = await ReportPage({
+      searchParams: Promise.resolve({ year: "2026", month: "5", region: "Central" }),
     });
 
     render(page);
 
-    expect(screen.getByText("Total branches")).toBeInTheDocument();
-    expect(screen.getByText("Total units")).toBeInTheDocument();
-    expect(screen.getByText("PM logged units")).toBeInTheDocument();
-    expect(screen.getByText("Branch List")).toBeInTheDocument();
-    expect(screen.getByText("Showing branches in Central")).toBeInTheDocument();
-  });
-
-  it("renders branch cards for the active region", async () => {
-    const page = await DashboardPage({
-      searchParams: Promise.resolve({ region: "Central" }),
-    });
-
-    render(page);
-
-    expect(screen.getByRole("link", { name: /BKK-01/i })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /CNX-01/i })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Year")).toBeInTheDocument();
+    expect(screen.getByLabelText("Month")).toBeInTheDocument();
+    expect(screen.getByLabelText("Cycle")).toBeInTheDocument();
+    expect(screen.getByText("Overdue units")).toBeInTheDocument();
+    expect(screen.getByText("% PM success by supplier")).toBeInTheDocument();
+    expect(screen.getByText("Branches needing PM attention")).toBeInTheDocument();
+    expect(screen.getByText("Units needing PM attention")).toBeInTheDocument();
   });
 });

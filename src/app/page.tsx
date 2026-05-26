@@ -30,6 +30,12 @@ export default function HomePage() {
           </Link>
           <Link
             className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--text)]"
+            href="/report"
+          >
+            Open report
+          </Link>
+          <Link
+            className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--text)]"
             href="/admin/qr-console"
           >
             QR Console

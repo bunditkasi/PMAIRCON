@@ -6,12 +6,14 @@ import { FieldWrapper, SelectInput } from "../ui/form-field";
 import { SectionCard } from "../ui/section-card";
 
 interface DashboardFilterBarProps {
+  actionHref?: string;
   filters: DashboardFilters;
   years: number[];
   regions: string[];
   suppliers: string[];
   seniors: string[];
   states: string[];
+  resetHref?: string;
 }
 
 const MONTH_OPTIONS = [
@@ -39,16 +41,18 @@ const CYCLE_OPTIONS = [
 ] as const;
 
 export function DashboardFilterBar({
+  actionHref = "/dashboard",
   filters,
   years,
   regions,
   suppliers,
   seniors,
   states,
+  resetHref = "/dashboard",
 }: DashboardFilterBarProps) {
   return (
     <SectionCard eyebrow="Report filters" title="Filter reporting scope">
-      <form action="/dashboard" className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <form action={actionHref} className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <FieldWrapper label="Year">
           <SelectInput aria-label="Year" defaultValue={String(filters.year)} name="year">
             {years.map((year) => (
@@ -148,7 +152,7 @@ export function DashboardFilterBar({
           </button>
           <Link
             className="rounded-full border border-[var(--border)] px-5 py-3 text-sm font-medium text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
-            href="/dashboard"
+            href={resetHref}
           >
             Reset filters
           </Link>

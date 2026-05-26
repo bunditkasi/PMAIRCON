@@ -12,6 +12,7 @@ import {
 interface RegionMapProps {
   regions: RegionDashboardSummary[];
   activeRegion: string | null;
+  basePath?: string;
   filterQuery?: Record<string, string | null | undefined>;
 }
 
@@ -27,6 +28,7 @@ const COLOR_STOPS = [
 export function RegionMap({
   regions,
   activeRegion,
+  basePath = "/dashboard",
   filterQuery = {},
 }: RegionMapProps) {
   const regionsById = new Map(
@@ -64,7 +66,7 @@ export function RegionMap({
           </div>
           <Link
             className="rounded-full border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-muted)] transition hover:border-[var(--accent)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(44,91,73,0.18)]"
-            href={regionHref(null, false, filterQuery)}
+            href={regionHref(null, false, filterQuery, basePath)}
           >
             Reset region filter
           </Link>
@@ -88,7 +90,7 @@ export function RegionMap({
                   return (
                     <a
                       key={region.id}
-                      href={regionHref(region.summary.region, isActive, filterQuery)}
+                      href={regionHref(region.summary.region, isActive, filterQuery, basePath)}
                       aria-label={`${region.summary.region} region, ${region.summary.currentCycleCompletionPercent}% current cycle completion, ${region.summary.annualCompletionPercent}% annual completion, ${region.summary.totalUnits} units`}
                       aria-current={isActive ? "page" : undefined}
                     >
@@ -148,7 +150,7 @@ export function RegionMap({
                       <Link
                         aria-label={`${region.region} current cycle ${region.currentCycleCompletionPercent}%`}
                         className="w-full rounded-[1rem] border px-3 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(44,91,73,0.18)]"
-                        href={regionHref(region.region, isActive, filterQuery)}
+                        href={regionHref(region.region, isActive, filterQuery, basePath)}
                         style={{
                           backgroundColor: regionColor.backgroundColor,
                           borderColor: isActive ? "var(--accent)" : "var(--border)",
@@ -208,6 +210,7 @@ function regionHref(
   region: string | null,
   isActive: boolean,
   filterQuery: Record<string, string | null | undefined>,
+  basePath: string,
 ) {
   const params = new URLSearchParams();
 
@@ -225,7 +228,7 @@ function regionHref(
 
   const queryString = params.toString();
 
-  return queryString ? `/dashboard?${queryString}` : "/dashboard";
+  return queryString ? `${basePath}?${queryString}` : basePath;
 }
 
 function getRegionColor(percent: number) {

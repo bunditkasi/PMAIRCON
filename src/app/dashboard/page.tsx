@@ -1,29 +1,16 @@
-import Link from "next/link";
 import React from "react";
 
-import { DashboardFilterBar } from "../../features/dashboard/filter-bar";
-import { OperationalTable } from "../../features/dashboard/operational-table";
-import { PerformanceTable } from "../../features/dashboard/performance-table";
 import { RegionMap } from "../../features/dashboard/region-map";
 import { SummaryCards } from "../../features/dashboard/summary-cards";
 import { AppShell } from "../../features/ui/app-shell";
+import { RecordLinkRow } from "../../features/ui/record-link-row";
+import { SectionCard } from "../../features/ui/section-card";
 import { loadAppDataCollections } from "../../lib/services/app-data";
-import {
-  summarizeDashboard,
-  type BranchOperationalRow,
-  type UnitOperationalRow,
-} from "../../lib/services/dashboard-service";
-import { normalizeDashboardFilters } from "../../lib/services/dashboard-filter";
+import { summarizeDashboard } from "../../lib/services/dashboard-service";
 
 interface DashboardPageProps {
   searchParams?: Promise<{
-    year?: string;
-    month?: string;
-    cycle?: string;
     region?: string;
-    supplier?: string;
-    senior?: string;
-    state?: string;
   }>;
 }
 
@@ -32,6 +19,7 @@ export default async function DashboardPage({
 }: DashboardPageProps) {
   const params = searchParams ? await searchParams : undefined;
   const collections = await loadAppDataCollections();
+  const activeRegion = resolveActiveRegion(collections.branches, params?.region);
   const todayParts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Bangkok",
     year: "numeric",
@@ -53,19 +41,26 @@ export default async function DashboardPage({
     minute: "2-digit",
     hour12: false,
   }).format(new Date());
-  const filters = normalizeDashboardFilters(params ?? {}, { today });
   const summary = summarizeDashboard(
     {
       branches: collections.branches,
       units: collections.units,
       pmLogs: collections.pmLogs,
-      repairLogs: collections.repairLogs,
+      repairLogs: collections.repairLogs.map((log) => ({
+        unitId: log.unitId,
+        repairStatus: log.repairStatus ?? "IN_PROGRESS",
+      })),
     },
     {
       today,
-      filters,
+      year,
+      activeRegion,
     },
   );
+  const branchDirectory = collections.branches
+    .filter((branch) => !activeRegion || branch.region === activeRegion)
+    .sort((left, right) => left.branchCode.localeCompare(right.branchCode));
+  const unitTypeCountsByBranch = summarizeUnitTypesByBranch(collections.units);
 
   return (
     <AppShell
@@ -89,163 +84,94 @@ export default async function DashboardPage({
         </section>
       }
     >
-      <DashboardFilterBar
-        filters={filters}
-        years={collectDashboardYears(collections.pmLogs, filters.year)}
-        regions={collectUniqueValues(collections.branches.map((branch) => branch.region))}
-        suppliers={collectUniqueValues(collections.branches.map((branch) => branch.supplierName))}
-        seniors={collectUniqueValues(collections.branches.map((branch) => branch.seniorName ?? ""))}
-        states={collectUniqueValues(collections.branches.map((branch) => branch.state))}
-      />
-
       <SummaryCards summary={summary} />
+      <RegionMap activeRegion={activeRegion} regions={summary.regions} />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        <RegionMap
-          activeRegion={summary.activeRegion}
-          filterQuery={{
-            year: String(filters.year),
-            month: filters.month != null ? String(filters.month) : null,
-            cycle: filters.month == null && filters.cycle != null ? String(filters.cycle) : null,
-            supplier: filters.supplier,
-            senior: filters.senior,
-            state: filters.state,
-            region: filters.region,
-          }}
-          regions={summary.regions}
-        />
+      {activeRegion ? (
+        <p className="text-sm text-[var(--text-muted)]">
+          Showing branches in {activeRegion}
+        </p>
+      ) : null}
 
-        <PerformanceTable
-          eyebrow="Supplier performance"
-          title="% PM success by supplier"
-          columns={["Supplier", "Units", "Required PM", "Completed PM", "Completion %"]}
-          rows={summary.supplierPerformance.map((row) => [
-            row.supplier,
-            String(row.unitsInScope),
-            String(row.requiredPmJobs),
-            String(row.completedPmJobs),
-            `${row.completionPercent}%`,
-          ])}
-        />
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <PerformanceTable
-          eyebrow="Regional performance"
-          title="% PM success by region"
-          columns={["Region", "Units", "Required PM", "Completed PM", "Completion %"]}
-          rows={summary.regionPerformance.map((row) => [
-            row.region,
-            String(row.unitsInScope),
-            String(row.requiredPmJobs),
-            String(row.completedPmJobs),
-            `${row.completionPercent}%`,
-          ])}
-        />
-
-        <PerformanceTable
-          eyebrow="Comparison"
-          title="Region vs supplier"
-          columns={["Region", "Supplier", "Units", "Required PM", "Completion %"]}
-          rows={summary.regionSupplierComparison.map((row) => [
-            row.region,
-            row.supplier,
-            String(row.unitsInScope),
-            String(row.requiredPmJobs),
-            `${row.completionPercent}%`,
-          ])}
-        />
-      </div>
-
-      <OperationalTable
-        eyebrow="Operational follow-up"
-        title="Branches needing PM attention"
-        columns={["Branch", "Region", "Supplier", "Senior", "Due", "Completed", "Overdue", "Action"]}
-        rows={summary.branchOperationalRows.map((row) => [
-          renderBranchCell(row),
-          row.region,
-          row.supplier,
-          row.senior,
-          String(row.dueUnits),
-          String(row.completedUnits),
-          String(row.overdueUnits),
-          <Link
-            key={`${row.branchCode}-link`}
-            className="font-semibold text-[var(--accent)] hover:underline"
-            href={`/branches/${row.branchCode}`}
-          >
-            Open branch
-          </Link>,
-        ])}
-      />
-
-      <OperationalTable
-        eyebrow="Unit follow-up"
-        title="Units needing PM attention"
-        columns={["Unit", "Region", "Supplier", "Latest PM", "Latest repair", "Repairs after PM", "Action"]}
-        rows={summary.unitOperationalRows.map((row) => [
-          renderUnitCell(row),
-          row.region,
-          row.supplier,
-          row.latestPmDate ?? "No PM logged",
-          row.latestRepairDate ?? "No repair logged",
-          String(row.repairsAfterLatestPm),
-          <Link
-            key={`${row.unitId}-link`}
-            className="font-semibold text-[var(--accent)] hover:underline"
-            href={`/units/${row.unitId}`}
-          >
-            Open unit
-          </Link>,
-        ])}
-      />
+      <SectionCard
+        aside={`${branchDirectory.length} branches`}
+        eyebrow="Branch directory"
+        title="Branch List"
+      >
+        <div className="grid max-h-[32rem] gap-3 overflow-y-auto pr-1 md:grid-cols-2 xl:grid-cols-3">
+          {branchDirectory.map((branch) => (
+            <RecordLinkRow
+              key={branch.branchCode}
+              details={unitTypeCountsByBranch.get(branch.branchCode) ?? []}
+              href={`/branches/${branch.branchCode}`}
+              meta={`Supplier: ${branch.supplierName || "Not assigned"}`}
+              subtitle={branch.outletName}
+              title={branch.branchCode}
+            />
+          ))}
+        </div>
+      </SectionCard>
     </AppShell>
   );
 }
 
-function collectUniqueValues(values: string[]) {
-  return [...new Set(values.map((value) => value.trim()).filter(Boolean))].sort(
-    (left, right) => left.localeCompare(right),
+function resolveActiveRegion(
+  branches: Array<{ region: string }>,
+  requestedRegion?: string,
+) {
+  const normalizedRequestedRegion = requestedRegion?.trim().toLowerCase();
+
+  if (!normalizedRequestedRegion) {
+    return null;
+  }
+
+  const matchedBranch = branches.find(
+    (branch) => branch.region.trim().toLowerCase() === normalizedRequestedRegion,
   );
+
+  return matchedBranch?.region ?? null;
 }
 
-function collectDashboardYears(
-  pmLogs: Array<{ serviceDate: string }>,
-  fallbackYear: number,
+function summarizeUnitTypesByBranch(
+  units: Array<{ unitId: string; branchCode: string }>,
 ) {
-  const years = new Set<number>([fallbackYear]);
+  const countsByBranch = new Map<string, Map<string, number>>();
 
-  for (const log of pmLogs) {
-    const match = /^(\d{4})-\d{2}-\d{2}$/.exec(log.serviceDate);
+  for (const unit of units) {
+    const unitType = extractUnitType(unit.unitId, unit.branchCode);
 
-    if (!match) {
+    if (!unitType) {
       continue;
     }
 
-    years.add(Number(match[1]));
+    const branchCounts = countsByBranch.get(unit.branchCode) ?? new Map<string, number>();
+    branchCounts.set(unitType, (branchCounts.get(unitType) ?? 0) + 1);
+    countsByBranch.set(unit.branchCode, branchCounts);
   }
 
-  return [...years].sort((left, right) => right - left);
-}
-
-function renderBranchCell(row: BranchOperationalRow) {
-  return (
-    <div className="space-y-1">
-      <p className="font-semibold text-[var(--text)]">{row.branchCode}</p>
-      <p className="text-xs text-[var(--text-muted)]">{row.outletName}</p>
-      {row.state ? (
-        <p className="text-xs text-[var(--text-muted)]">{row.state}</p>
-      ) : null}
-    </div>
+  return new Map(
+    [...countsByBranch.entries()].map(([branchCode, branchCounts]) => [
+      branchCode,
+      [...branchCounts.entries()]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([label, value]) => ({ label, value })),
+    ]),
   );
 }
 
-function renderUnitCell(row: UnitOperationalRow) {
-  return (
-    <div className="space-y-1">
-      <p className="font-semibold text-[var(--text)]">{row.unitId}</p>
-      <p className="text-xs text-[var(--text-muted)]">{row.branchCode}</p>
-      <p className="text-xs text-[var(--text-muted)]">{row.outletName}</p>
-    </div>
-  );
+function extractUnitType(unitId: string, branchCode: string) {
+  const prefix = `${branchCode}-`;
+
+  if (!unitId.startsWith(prefix)) {
+    return null;
+  }
+
+  const segments = unitId.slice(prefix.length).split("-");
+  const unitType = segments[0]?.trim().toUpperCase();
+
+  if (!unitType || !/^[A-Z]{2,4}$/.test(unitType)) {
+    return null;
+  }
+
+  return unitType;
 }
