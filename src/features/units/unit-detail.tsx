@@ -40,6 +40,25 @@ export function UnitDetail({ detail }: UnitDetailProps) {
         />
       </div>
 
+      <section className="mt-6 rounded-[1.25rem] border border-[var(--border)] bg-[var(--surface-muted)]/60 p-4">
+        <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+          PM vs repair
+        </h3>
+        <p className="mt-3 text-base font-semibold text-[var(--text)]">
+          {detail.pmRepairSummary.message}
+        </p>
+        <div className="mt-2 grid gap-2 text-sm text-[var(--text-muted)] md:grid-cols-2">
+          <p>
+            Latest PM:{" "}
+            {detail.pmRepairSummary.latestPmDate ?? "No successful PM"}
+          </p>
+          <p>
+            Latest repair:{" "}
+            {detail.pmRepairSummary.latestRepairDate ?? "No repair logged"}
+          </p>
+        </div>
+      </section>
+
       {detail.hasPmHistoryTable || detail.hasRepairHistoryTable ? (
         <div className="mt-6 grid gap-4 xl:grid-cols-2">
           {detail.hasPmHistoryTable ? (

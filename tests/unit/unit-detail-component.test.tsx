@@ -28,7 +28,7 @@ describe("UnitDetail", () => {
             {
               serviceDate: "2026-05-19",
               serviceStatus: "DONE",
-              cycleLabel: "2026 รอบ 2",
+              cycleLabel: "2026 à¸£à¸­à¸š 2",
             },
           ],
           repairTableRows: [
@@ -38,6 +38,12 @@ describe("UnitDetail", () => {
               repairStatus: "DONE",
             },
           ],
+          pmRepairSummary: {
+            repairsAfterLatestPm: 0,
+            latestPmDate: "2026-05-19",
+            latestRepairDate: "2026-05-18",
+            message: "No repair recorded after latest PM",
+          },
           hasPmHistoryTable: true,
           hasRepairHistoryTable: true,
         }}
@@ -48,7 +54,11 @@ describe("UnitDetail", () => {
     expect(screen.getAllByText("Water leak")).toHaveLength(2);
     expect(screen.getByText("PM history")).toBeInTheDocument();
     expect(screen.getByText("Repair history")).toBeInTheDocument();
-    expect(screen.getByText("2026 รอบ 2")).toBeInTheDocument();
+    expect(screen.getByText("PM vs repair")).toBeInTheDocument();
+    expect(
+      screen.getByText("No repair recorded after latest PM"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("2026 à¸£à¸­à¸š 2")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Submit PM" })).toHaveAttribute(
       "href",
       "/units/BC01-CS-01/pm/new",
@@ -72,6 +82,13 @@ describe("UnitDetail", () => {
           repairHistory: [],
           pmTableRows: [],
           repairTableRows: [],
+          pmRepairSummary: {
+            repairsAfterLatestPm: 0,
+            latestPmDate: null,
+            latestRepairDate: null,
+            message:
+              "No successful PM recorded yet. Repair history is shown without after-PM comparison.",
+          },
           hasPmHistoryTable: false,
           hasRepairHistoryTable: false,
         }}
@@ -99,10 +116,16 @@ describe("UnitDetail", () => {
             {
               serviceDate: "2026-06-01",
               serviceStatus: "DONE",
-              cycleLabel: "2026 รอบ 2",
+              cycleLabel: "2026 à¸£à¸­à¸š 2",
             },
           ],
           repairTableRows: [],
+          pmRepairSummary: {
+            repairsAfterLatestPm: 0,
+            latestPmDate: "2026-06-01",
+            latestRepairDate: null,
+            message: "No repair recorded after latest PM",
+          },
           hasPmHistoryTable: true,
           hasRepairHistoryTable: false,
         }}

@@ -14,6 +14,7 @@ export interface LiveSheetCollections {
     branchCode: string;
     outletName: string;
     supplierName: string;
+    seniorName?: string;
     fullStoreName: string;
     state: string;
     startBusinessDate: string;
@@ -85,6 +86,7 @@ export function mapSheetRowsToCollections(input: {
         branchCode: row.branch_code,
         outletName: row.outlet_name,
         supplierName: row.supplier_name,
+        seniorName: row.senior_name || row.senior || "",
         fullStoreName: row.full_store_name || "",
         state: row.state || "",
         startBusinessDate: row.start_business_date || "",

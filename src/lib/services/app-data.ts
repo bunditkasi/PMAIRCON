@@ -15,6 +15,7 @@ export async function loadAppDataCollections(): Promise<LiveSheetCollections> {
       ...branch,
       region: "",
       pmStartMonth: null,
+      seniorName: branch.seniorName ?? "",
     })),
     units: detailUnitFixtures,
     pmLogs: detailPmFixtures.map((log) => ({

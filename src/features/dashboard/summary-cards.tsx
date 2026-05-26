@@ -1,4 +1,5 @@
 import React from "react";
+
 import type {
   DashboardAnalyticsSummary,
   DashboardSummary,
@@ -19,9 +20,24 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
     accent?: "default" | "success";
     supportingText?: string;
   }> = [
-    { key: "totalBranches", label: "Total branches", value: summary.totalBranches },
-    { key: "totalUnits", label: "Total units", value: summary.totalUnits },
-    { key: "pmLoggedUnits", label: "PM logged units", value: summary.pmLoggedUnits },
+    {
+      key: "overdueUnits",
+      label: "Overdue units",
+      value: summary.overdueUnits,
+      supportingText: "Units due in the active scope without a completed PM log",
+    },
+    {
+      key: "dueThisMonth",
+      label: "Due this month",
+      value: summary.dueThisMonth,
+      supportingText: "Units scheduled in the selected or current month",
+    },
+    {
+      key: "dueThisCycle",
+      label: "Due this cycle",
+      value: summary.dueThisCycle,
+      supportingText: "Units scheduled in the selected or active cycle",
+    },
     { key: "openRepairs", label: "Open repairs", value: summary.openRepairs },
     {
       key: "annualCompletionPercent",
@@ -31,9 +47,9 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
       supportingText: "Share of required PM visits completed this year",
     },
     {
-      key: "currentCycleCompletionPercent",
+      key: "cycleCompletionPercent",
       label: "Current cycle completion",
-      value: `${summary.currentCycleCompletionPercent}%`,
+      value: `${summary.cycleCompletionPercent}%`,
       accent: "success",
       supportingText: `Cycle ${summary.activeCycleMonth} progress across active units`,
     },

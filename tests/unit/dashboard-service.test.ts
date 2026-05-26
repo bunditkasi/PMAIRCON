@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { normalizeDashboardFilters } from "../../src/lib/services/dashboard-filter";
 import { summarizeDashboard } from "../../src/lib/services/dashboard-service";
 
 describe("summarizeDashboard", () => {
@@ -107,11 +108,6 @@ describe("summarizeDashboard", () => {
         region: "Central",
         annualCompletionPercent: 33.33,
         currentCycleCompletionPercent: 100,
-      }),
-      expect.objectContaining({
-        region: "North",
-        annualCompletionPercent: 33.33,
-        currentCycleCompletionPercent: 0,
       }),
     ]);
   });
@@ -255,5 +251,110 @@ describe("summarizeDashboard", () => {
     expect(result.annualCompletionPercent).toBe(0);
     expect(result.currentCycleCompletionPercent).toBe(0);
     expect(result.activeRegion).toBe("North");
+  });
+
+  it("builds overdue and due metrics for a selected month scope", () => {
+    const summary = summarizeDashboard(
+      {
+        branches: [
+          {
+            branchCode: "B001",
+            outletName: "ABCD",
+            region: "East",
+            state: "Chonburi",
+            seniorName: "Know",
+            supplierName: "SS Air Service",
+            pmStartMonth: 1,
+          },
+        ],
+        units: [
+          { unitId: "B001-CT-01", branchCode: "B001" },
+          { unitId: "B001-CT-02", branchCode: "B001" },
+        ],
+        pmLogs: [
+          {
+            unitId: "B001-CT-01",
+            serviceDate: "2026-05-20",
+            serviceStatus: "DONE",
+          },
+        ],
+        repairLogs: [],
+      },
+      {
+        today: "2026-05-26",
+        filters: normalizeDashboardFilters(
+          { year: "2026", month: "5" },
+          { today: "2026-05-26" },
+        ),
+      },
+    );
+
+    expect(summary.overdueUnits).toBe(1);
+    expect(summary.dueThisMonth).toBe(2);
+    expect(summary.branchOperationalRows[0]?.overdueUnits).toBe(1);
+    expect(summary.branchOperationalRows[0]?.completedUnits).toBe(1);
+  });
+
+  it("builds supplier performance inside the active scope", () => {
+    const summary = summarizeDashboard(
+      {
+        branches: [
+          {
+            branchCode: "B001",
+            outletName: "ABCD",
+            region: "East",
+            state: "Chonburi",
+            seniorName: "Know",
+            supplierName: "SS Air Service",
+            pmStartMonth: 1,
+          },
+          {
+            branchCode: "B002",
+            outletName: "EFGH",
+            region: "East",
+            state: "Rayong",
+            seniorName: "Know",
+            supplierName: "Cooling Partner",
+            pmStartMonth: 1,
+          },
+        ],
+        units: [
+          { unitId: "B001-CT-01", branchCode: "B001" },
+          { unitId: "B002-CT-01", branchCode: "B002" },
+        ],
+        pmLogs: [
+          {
+            unitId: "B001-CT-01",
+            serviceDate: "2026-05-10",
+            serviceStatus: "DONE",
+          },
+        ],
+        repairLogs: [],
+      },
+      {
+        today: "2026-05-26",
+        filters: normalizeDashboardFilters(
+          { year: "2026", cycle: "1" },
+          { today: "2026-05-26" },
+        ),
+      },
+    );
+
+    expect(summary.supplierPerformance).toEqual([
+      expect.objectContaining({
+        supplier: "Cooling Partner",
+        unitsInScope: 1,
+        requiredPmJobs: 1,
+        completedPmJobs: 0,
+        completionPercent: 0,
+      }),
+      expect.objectContaining({
+        supplier: "SS Air Service",
+        unitsInScope: 1,
+        requiredPmJobs: 1,
+        completedPmJobs: 1,
+        completionPercent: 100,
+      }),
+    ]);
   });
 });

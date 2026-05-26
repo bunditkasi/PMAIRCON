@@ -33,6 +33,12 @@ export interface UnitDetail {
     issueDetail: string;
     repairStatus: string;
   }>;
+  pmRepairSummary: {
+    repairsAfterLatestPm: number;
+    latestPmDate: string | null;
+    latestRepairDate: string | null;
+    message: string;
+  };
   hasPmHistoryTable: boolean;
   hasRepairHistoryTable: boolean;
 }
@@ -83,10 +89,7 @@ function parseServiceDate(serviceDate: string): number | null {
   return Number.isNaN(parsedTimestamp) ? null : parsedTimestamp;
 }
 
-function sortByServiceDateDesc<T extends { serviceDate: string }>(
-  left: T,
-  right: T,
-) {
+function sortByServiceDateDesc<T extends { serviceDate: string }>(left: T, right: T) {
   const leftTimestamp = parseServiceDate(left.serviceDate);
   const rightTimestamp = parseServiceDate(right.serviceDate);
 
@@ -136,7 +139,47 @@ function buildPmCycleLabel(serviceDate: string, pmStartMonth?: number): string {
       ((normalizedServiceMonth - normalizedStartMonth + 12) % 12) / 4,
     ) + 1;
 
-  return `${String(cycleYear).padStart(4, "0")} รอบ ${cycleNumber}`;
+  return `${String(cycleYear).padStart(4, "0")} \u0e23\u0e2d\u0e1a ${cycleNumber}`;
+}
+
+function buildPmRepairSummary(
+  pmHistory: UnitPmRecord[],
+  repairHistory: UnitRepairRecord[],
+) {
+  const latestSuccessfulPm =
+    pmHistory.find((item) => (item.serviceStatus ?? "DONE") === "DONE") ?? null;
+  const latestRepair = repairHistory[0] ?? null;
+
+  if (!latestSuccessfulPm) {
+    return {
+      repairsAfterLatestPm: 0,
+      latestPmDate: null,
+      latestRepairDate: latestRepair?.serviceDate ?? null,
+      message:
+        "No successful PM recorded yet. Repair history is shown without after-PM comparison.",
+    };
+  }
+
+  const latestPmTimestamp = parseServiceDate(latestSuccessfulPm.serviceDate);
+  const repairsAfterLatestPm = repairHistory.filter((item) => {
+    const repairTimestamp = parseServiceDate(item.serviceDate);
+
+    return (
+      latestPmTimestamp !== null &&
+      repairTimestamp !== null &&
+      repairTimestamp > latestPmTimestamp
+    );
+  }).length;
+
+  return {
+    repairsAfterLatestPm,
+    latestPmDate: latestSuccessfulPm.serviceDate,
+    latestRepairDate: latestRepair?.serviceDate ?? null,
+    message:
+      repairsAfterLatestPm > 0
+        ? `Repairs after latest PM: ${repairsAfterLatestPm}`
+        : "No repair recorded after latest PM",
+  };
 }
 
 export function assembleUnitDetail(
@@ -162,6 +205,7 @@ export function assembleUnitDetail(
     issueDetail: item.issueDetail,
     repairStatus: item.repairStatus ?? "PENDING",
   }));
+  const pmRepairSummary = buildPmRepairSummary(pmHistory, repairHistory);
 
   return {
     unit: { ...unit },
@@ -171,6 +215,7 @@ export function assembleUnitDetail(
     repairHistory,
     pmTableRows,
     repairTableRows,
+    pmRepairSummary,
     hasPmHistoryTable: pmTableRows.length > 0,
     hasRepairHistoryTable: repairTableRows.length > 0,
   };

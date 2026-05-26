@@ -11,6 +11,11 @@ vi.mock("../../src/lib/services/app-data", () => ({
         branchCode: "BKK-01",
         outletName: "Bangkok Central",
         supplierName: "Supplier A",
+        seniorName: "Senior A",
+        fullStoreName: "Store A",
+        state: "Bangkok",
+        startBusinessDate: "2020-01-01",
+        mapUrl: "",
         region: "Central",
         pmStartMonth: 1,
       },
@@ -18,6 +23,11 @@ vi.mock("../../src/lib/services/app-data", () => ({
         branchCode: "CNX-01",
         outletName: "Chiang Mai North",
         supplierName: "Supplier B",
+        seniorName: "Senior B",
+        fullStoreName: "Store B",
+        state: "Chiang Mai",
+        startBusinessDate: "2020-02-01",
+        mapUrl: "",
         region: "North",
         pmStartMonth: 2,
       },
@@ -25,7 +35,6 @@ vi.mock("../../src/lib/services/app-data", () => ({
     units: [
       { unitId: "BKK-01-CUR-01", branchCode: "BKK-01" },
       { unitId: "BKK-01-CT-01", branchCode: "BKK-01" },
-      { unitId: "BKK-01-CT-02", branchCode: "BKK-01" },
       { unitId: "CNX-01-CS-01", branchCode: "CNX-01" },
     ],
     pmLogs: [
@@ -35,62 +44,46 @@ vi.mock("../../src/lib/services/app-data", () => ({
         serviceStatus: "DONE",
       },
     ],
-    repairLogs: [],
+    repairLogs: [
+      {
+        unitId: "CNX-01-CS-01",
+        serviceDate: "2026-05-12",
+        issueDetail: "Water leak",
+        repairStatus: "IN_PROGRESS",
+      },
+    ],
   })),
 }));
 
 describe("DashboardPage", () => {
-  it("shows active region copy and filters the branch directory from search params", async () => {
+  it("renders filter controls and overdue KPI labels", async () => {
     const page = await DashboardPage({
-      searchParams: Promise.resolve({ region: "Central" }),
+      searchParams: Promise.resolve({ year: "2026", month: "5", region: "Central" }),
     });
 
     render(page);
 
-    expect(
-      screen.getByText("Showing branches in Central"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Branch List")).toBeInTheDocument();
-    expect(screen.getByText("MR.D.I.Y Maintenance team")).toBeInTheDocument();
-    expect(
-      screen.queryByText("Bundit Kasicheewin (Know)"),
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "BKK-01" })).toBeInTheDocument();
-    expect(screen.getByText("CT = 2")).toBeInTheDocument();
-    expect(screen.getByText("CUR = 1")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", { name: "CNX-01" }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Year")).toBeInTheDocument();
+    expect(screen.getByLabelText("Month")).toBeInTheDocument();
+    expect(screen.getByLabelText("Cycle")).toBeInTheDocument();
+    expect(screen.getByText("Overdue units")).toBeInTheDocument();
+    expect(screen.getByText("Due this month")).toBeInTheDocument();
+    expect(screen.getByText("Scoped to Central")).toBeInTheDocument();
   });
 
-  it("canonicalizes case-mismatched region params and ignores unknown regions", async () => {
-    const filteredPage = await DashboardPage({
-      searchParams: Promise.resolve({ region: "central" }),
+  it("renders supplier, region, branch, and unit report sections", async () => {
+    const page = await DashboardPage({
+      searchParams: Promise.resolve({ year: "2026", cycle: "1" }),
     });
 
-    const rendered = render(filteredPage);
+    render(page);
 
-    expect(
-      screen.getByText("Showing branches in Central"),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "BKK-01" })).toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", { name: "CNX-01" }),
-    ).not.toBeInTheDocument();
-
-    rendered.unmount();
-
-    const unfilteredPage = await DashboardPage({
-      searchParams: Promise.resolve({ region: "Unknown" }),
-    });
-
-    render(unfilteredPage);
-
-    expect(
-      screen.queryByText("Showing branches in Unknown"),
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "BKK-01" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "CNX-01" })).toBeInTheDocument();
-    expect(screen.getByText("CS = 1")).toBeInTheDocument();
+    expect(screen.getByText("% PM success by supplier")).toBeInTheDocument();
+    expect(screen.getByText("% PM success by region")).toBeInTheDocument();
+    expect(screen.getByText("Region vs supplier")).toBeInTheDocument();
+    expect(screen.getByText("Branches needing PM attention")).toBeInTheDocument();
+    expect(screen.getByText("Units needing PM attention")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Open branch" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: "Open unit" }).length).toBeGreaterThan(0);
   });
 });

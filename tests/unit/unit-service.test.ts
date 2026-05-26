@@ -30,6 +30,12 @@ describe("assembleUnitDetail", () => {
 
     expect(detail.latestPm?.serviceDate).toBe("2026-05-01");
     expect(detail.latestRepair?.issueDetail).toBe("water leak");
+    expect(detail.pmRepairSummary).toEqual({
+      repairsAfterLatestPm: 0,
+      latestPmDate: "2026-05-01",
+      latestRepairDate: "2026-03-01",
+      message: "No repair recorded after latest PM",
+    });
   });
 
   it("caps PM and repair tables to the latest 5 rows and adds cycle labels", () => {
@@ -84,6 +90,12 @@ describe("assembleUnitDetail", () => {
     ]);
     expect(detail.hasPmHistoryTable).toBe(true);
     expect(detail.hasRepairHistoryTable).toBe(true);
+    expect(detail.pmRepairSummary).toEqual({
+      repairsAfterLatestPm: 0,
+      latestPmDate: "2026-09-01",
+      latestRepairDate: "2026-04-20",
+      message: "No repair recorded after latest PM",
+    });
   });
 
   it("keeps non-January PM years under the cycle start year", () => {
@@ -125,8 +137,35 @@ describe("assembleUnitDetail", () => {
 
     expect(detail.pmTableRows).toEqual([]);
     expect(detail.repairTableRows).toEqual([]);
+    expect(detail.pmRepairSummary).toEqual({
+      repairsAfterLatestPm: 0,
+      latestPmDate: null,
+      latestRepairDate: null,
+      message:
+        "No successful PM recorded yet. Repair history is shown without after-PM comparison.",
+    });
     expect(detail.hasPmHistoryTable).toBe(false);
     expect(detail.hasRepairHistoryTable).toBe(false);
+  });
+
+  it("counts repairs after the latest successful PM", () => {
+    const detail = assembleUnitDetail(
+      { unitId: "B001-CT-01", branchCode: "B001", pmStartMonth: 1 },
+      [
+        { unitId: "B001-CT-01", serviceDate: "2026-05-10", serviceStatus: "DONE" },
+      ],
+      [
+        {
+          unitId: "B001-CT-01",
+          serviceDate: "2026-05-15",
+          issueDetail: "Water leak",
+          repairStatus: "DONE",
+        },
+      ],
+    );
+
+    expect(detail.pmRepairSummary.repairsAfterLatestPm).toBe(1);
+    expect(detail.pmRepairSummary.message).toContain("Repairs after latest PM");
   });
 });
 
@@ -196,6 +235,12 @@ describe("findUnitDetail", () => {
           repairStatus: "PENDING",
         },
       ],
+      pmRepairSummary: {
+        repairsAfterLatestPm: 0,
+        latestPmDate: "2026-05-01",
+        latestRepairDate: "2026-04-20",
+        message: "No repair recorded after latest PM",
+      },
       hasPmHistoryTable: true,
       hasRepairHistoryTable: true,
     });
@@ -244,6 +289,13 @@ describe("findUnitDetail", () => {
       repairHistory: [],
       pmTableRows: [],
       repairTableRows: [],
+      pmRepairSummary: {
+        repairsAfterLatestPm: 0,
+        latestPmDate: null,
+        latestRepairDate: null,
+        message:
+          "No successful PM recorded yet. Repair history is shown without after-PM comparison.",
+      },
       hasPmHistoryTable: false,
       hasRepairHistoryTable: false,
     });
@@ -270,6 +322,12 @@ describe("findUnitDetail", () => {
         },
       ],
       repairTableRows: [],
+      pmRepairSummary: {
+        repairsAfterLatestPm: 0,
+        latestPmDate: "2026-04-15",
+        latestRepairDate: null,
+        message: "No repair recorded after latest PM",
+      },
       hasPmHistoryTable: true,
       hasRepairHistoryTable: false,
     });

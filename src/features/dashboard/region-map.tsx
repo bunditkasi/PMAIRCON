@@ -1,5 +1,5 @@
-import React from "react";
 import Link from "next/link";
+import React from "react";
 
 import type { RegionDashboardSummary } from "../../lib/services/dashboard-service";
 import { RegionLegend } from "./region-legend";
@@ -12,6 +12,7 @@ import {
 interface RegionMapProps {
   regions: RegionDashboardSummary[];
   activeRegion: string | null;
+  filterQuery?: Record<string, string | null | undefined>;
 }
 
 const COLOR_STOPS = [
@@ -26,6 +27,7 @@ const COLOR_STOPS = [
 export function RegionMap({
   regions,
   activeRegion,
+  filterQuery = {},
 }: RegionMapProps) {
   const regionsById = new Map(
     regions.map((region) => [normalizeRegionId(region.region), region] as const),
@@ -62,7 +64,7 @@ export function RegionMap({
           </div>
           <Link
             className="rounded-full border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-muted)] transition hover:border-[var(--accent)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(44,91,73,0.18)]"
-            href="/dashboard"
+            href={regionHref(null, false, filterQuery)}
           >
             Reset region filter
           </Link>
@@ -86,7 +88,7 @@ export function RegionMap({
                   return (
                     <a
                       key={region.id}
-                      href={regionHref(region.summary.region, isActive)}
+                      href={regionHref(region.summary.region, isActive, filterQuery)}
                       aria-label={`${region.summary.region} region, ${region.summary.currentCycleCompletionPercent}% current cycle completion, ${region.summary.annualCompletionPercent}% annual completion, ${region.summary.totalUnits} units`}
                       aria-current={isActive ? "page" : undefined}
                     >
@@ -146,7 +148,7 @@ export function RegionMap({
                       <Link
                         aria-label={`${region.region} current cycle ${region.currentCycleCompletionPercent}%`}
                         className="w-full rounded-[1rem] border px-3 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(44,91,73,0.18)]"
-                        href={regionHref(region.region, isActive)}
+                        href={regionHref(region.region, isActive, filterQuery)}
                         style={{
                           backgroundColor: regionColor.backgroundColor,
                           borderColor: isActive ? "var(--accent)" : "var(--border)",
@@ -202,12 +204,28 @@ function normalizeRegionId(value: string) {
   return value.toLowerCase().replace(/[^a-z]/g, "");
 }
 
-function regionHref(region: string, isActive: boolean) {
-  if (isActive) {
-    return "/dashboard";
+function regionHref(
+  region: string | null,
+  isActive: boolean,
+  filterQuery: Record<string, string | null | undefined>,
+) {
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(filterQuery)) {
+    if (!value || key === "region") {
+      continue;
+    }
+
+    params.set(key, value);
   }
 
-  return `/dashboard?region=${encodeURIComponent(region)}`;
+  if (!isActive && region) {
+    params.set("region", region);
+  }
+
+  const queryString = params.toString();
+
+  return queryString ? `/dashboard?${queryString}` : "/dashboard";
 }
 
 function getRegionColor(percent: number) {
